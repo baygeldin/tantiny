@@ -22,13 +22,19 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 2.6"
 
-  # Specify which files should be added to the gem when it is released.
-  # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
-  spec.files = Dir.chdir(File.expand_path(__dir__)) do
-    `git ls-files -z`.split("\x0").reject do |f|
-      (f == __FILE__) || f.match(%r{\A(?:(?:test|spec|features)/|\.(?:github)|appveyor)})
-    end
-  end + Dir.glob("lib/.rbnext/**/*")
+  spec.files = [
+    Dir.glob("bin/**/*"),
+    Dir.glob("ext/**/*"),
+    Dir.glob("lib/**/*"),
+    Dir.glob("lib/.rbnext/**/*"),
+    Dir.glob("sig/**/*"),
+    Dir.glob("src/**/*"),
+    "Cargo.toml",
+    "Cargo.lock",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ].flatten
 
   spec.extensions << "ext/Rakefile"
 
