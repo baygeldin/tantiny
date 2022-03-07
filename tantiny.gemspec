@@ -30,7 +30,6 @@ Gem::Specification.new do |spec|
     Dir.glob("sig/**/*"),
     Dir.glob("src/**/*"),
     "Cargo.toml",
-    "Cargo.lock",
     "README.md",
     "CHANGELOG.md",
     "LICENSE"
