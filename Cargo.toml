@@ -1,0 +1,20 @@
+[package]
+name = "tantiny"
+version = "0.2.0" # {x-release-please-version}
+edition = "2021"
+authors = ["Alexander Baygeldin"]
+repository = "https://github.com/baygeldin/tantiny"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+rutie = "0.8"
+tantivy = "0.16"
+lazy_static = "1.4"
+paste = "1.0"
+
+[package.metadata.thermite]
+github_releases = true
+github_release_type = "latest"
+git_tag_regex = "^v(\\d+\\.\\d+\\.\\d+)$"

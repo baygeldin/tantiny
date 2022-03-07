@@ -1,0 +1,6 @@
+
+module Tantiny
+  module Helpers
+    def self.timestamp: ((Date | DateTime) date) -> String
+  end
+end

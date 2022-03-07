@@ -1,0 +1,11 @@
+require: standard
+
+inherit_gem:
+  standard: config/base.yml
+
+AllCops:
+  Exclude:
+    - 'bin/*'
+    - 'vendor/**/*'
+    - 'Gemfile'
+  TargetRubyVersion: 3.1

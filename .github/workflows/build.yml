@@ -1,0 +1,47 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        ruby: ['2.6', '3.1']
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: ${{ matrix.ruby }}
+        bundler-cache: true
+    - uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    - name: Install dependencies
+      run: bundle install
+    - name: Cache crate
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: cargo-${{ hashFiles('**/Cargo.lock') }}-ruby-${{ matrix.ruby }}
+    - name: Build crate
+      run: bundle exec rake build
+    - name: Lint source code with with RuboCop
+      run: bundle exec rake rubocop
+    - name: Verify static types with Steep
+      run: bundle exec rake steep
+    - name: Transpile source source with RubyNext
+      run: bundle exec rake nextify
+    - name: Run specs with RSpec
+      run: bundle exec rake spec

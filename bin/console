@@ -1,0 +1,59 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+require "pry"
+
+require "tantiny"
+
+path = File.join(__dir__, "../tmp")
+en_stem = Tantiny::Tokenizer.new(:stemmer, language: :en)
+
+index = Tantiny::Index.new path, tokenizer: en_stem do
+  id :imdb_id
+  facet :category
+  string :title
+  text :description
+  integer :duration
+  double :rating
+  date :release_date
+end
+
+rio_bravo = OpenStruct.new(
+  imdb_id: "tt0053221",
+  type: '/western/US',
+  title: "Rio Bravo",
+  description: "A small-town sheriff enlists a drunk, a kid and an old man to help him fight off a ruthless cattle baron.",
+  duration: 141,
+  rating: 8.0,
+  release_date: Date.parse("March 18, 1959")
+)
+
+hanabi = {
+  imdb_id: "tt0119250",
+  type: "/crime/Japan",
+  title: "Hana-bi",
+  description: "Nishi leaves the police in the face of harrowing personal and professional difficulties. Spiraling into depression, he makes questionable decisions.",
+  duration: 103,
+  rating: 7.7,
+  release_date: Date.parse("December 1, 1998")
+}
+
+brother = {
+  imdb_id: "tt0118767",
+  type: "/crime/Russia",
+  title: "Brother",
+  description: "An ex-soldier with a personal honor code enters the family crime business in St. Petersburg, Russia.",
+  duration: 99,
+  rating: 7.9,
+  release_date: Date.parse("December 12, 1997")
+}
+
+index << rio_bravo
+index << hanabi
+index << brother
+
+index.commit 
+index.reload
+
+binding.pry
