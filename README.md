@@ -9,7 +9,7 @@ The main philosophy is to provide low-level access Tantivy's inverted index, but
 Take a look at the most basic example:
 
 ```ruby
-index = Tantiny::Index.new "/path/to/index" { text :description }
+index = Tantiny::Index.new("/path/to/index") { text :description }
 
 index << { id: 1, description: "Hello World!" }
 index << { id: 2, description: "What's up?" }
@@ -37,7 +37,7 @@ Or install it yourself as:
 
     $ gem install tantiny
 
-You don't **have to** have Rust installed on your machine since Tantiny will try to download the pre-compiled binaries hosted on GitHub releases during the installation in case it can't find Cargo. However, if you want to build the native extensions yourself, you need to [install Rust](https://www.rust-lang.org/tools/install).
+You don't **have to** have Rust installed on your system since Tantiny will try to download the pre-compiled binaries hosted on GitHub releases during the installation. However, if no pre-compiled binaries were found for your system (which is a combination of platform, architecture, and Ruby version) you will need to [install Rust](https://www.rust-lang.org/tools/install) first.
 
 ## Defining the index
 
