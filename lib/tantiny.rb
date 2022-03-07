@@ -13,6 +13,7 @@ require "tantiny/tokenizer"
 require "tantiny/query"
 require "tantiny/index"
 
+require_relative "tantiny.so"
+
 module Tantiny
-  Rutie.new(:tantiny).init "init_tantiny", __dir__
 end

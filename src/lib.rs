@@ -8,7 +8,7 @@ mod query;
 mod tokenizer;
 
 #[no_mangle]
-pub extern "C" fn init_tantiny() {
+pub extern "C" fn Init_tantiny() {
     index::init();
     query::init();
     tokenizer::init();
