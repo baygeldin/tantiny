@@ -40,14 +40,6 @@ jobs:
       pull-requests: write
 
     steps:
-    - uses: GoogleCloudPlatform/release-please-action@v3
-      id: release
-      with:
-        release-type: ruby
-        package-name: tantiny
-        bump-minor-pre-major: true
-        bump-patch-for-minor-pre-major: true
-        version-file: "lib/tantiny/version.rb"
     - uses: actions/checkout@v2
     - uses: ruby/setup-ruby@v1
       with:
