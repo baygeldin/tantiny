@@ -7,9 +7,9 @@
 
 Need a fast full-text search for your Ruby script, but Solr and Elasticsearch are an overkill? 😏
 
-You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tantivy](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). The greatest advantage of using it is that you don't need *anything* to make it work (no separate server or process), it's purely embeddable. So, if your task at hand requires a full-text search, but a full-blown distributed search engine would be an overkill, Tantiny would be perfect for you.
+You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tantivy](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). It's great for cases when your task at hand requires a full-text search, but configuring a full-blown distributed search engine would take more time than the task itself. And even if you already use such an engine in your project (which is highly likely, actually), it still might be easier to just use Tantiny instead because unlike Solr and Elasticsearch it doesn't need *anything* to work (no separate server or process or whatever), it's purely embeddable. So, when you find yourself in a situation when using your search engine of choice would be tricky/inconvinient or would require additional setup you can always revert back to a quick and dirty solution that is nontheless flexible and fast.
 
-The main philosophy is to provide low-level access Tantivy's inverted index, but with a nice Ruby-esque API, sensible defaults, and additional functionality sprinkled on top (so, Tantiny not exactly bindings to Tantivy, but it tries to be close).
+Tantiny is not exactly bindings to Tantivy, but it tries to be close. The main philosophy is to provide low-level access to Tantivy's inverted index, but with a nice Ruby-esque API, sensible defaults, and additional functionality sprinkled on top.
 
 Take a look at the most basic example:
 
