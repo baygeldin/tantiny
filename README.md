@@ -1,3 +1,8 @@
+[![Build workflow](https://github.com/baygeldin/tantiny/actions/workflows/build.yml/badge.svg)](https://github.com/baygeldin/tantiny/actions/workflows/build.yml)
+[![Tantiny](https://img.shields.io/gem/v/tantiny?color=31c553)](https://rubygems.org/gems/tantiny)
+[![Maintainability](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/maintainability)](https://codeclimate.com/github/baygeldin/tantiny/maintainability)
+[![Test Coverage](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/test_coverage)](https://codeclimate.com/github/baygeldin/tantiny/test_coverage)
+
 # Tantiny
 
 Need a fast full-text search for your Ruby script, but Solr and Elasticsearch are an overkill? 😏
