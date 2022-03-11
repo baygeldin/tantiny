@@ -10,7 +10,7 @@ RSpec.describe Tantiny::Index do
   let(:tokenizer) { Tantiny::Tokenizer.default }
 
   after do
-    FileUtils.remove_dir(tmpdir)
+    FileUtils.rm_rf(tmpdir)
   end
 
   def documents
