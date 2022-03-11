@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "simplecov"
-SimpleCov.start
+SimpleCov.start if ENV["COVERAGE"]
 
 require "fileutils"
 require "tmpdir"
