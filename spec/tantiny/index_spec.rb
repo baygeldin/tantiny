@@ -10,7 +10,7 @@ RSpec.describe Tantiny::Index do
   let(:tokenizer) { Tantiny::Tokenizer.default }
 
   after do
-    FileUtils.remove_dir(tmpdir)
+    FileUtils.rm_rf(tmpdir)
   end
 
   def documents
@@ -26,6 +26,14 @@ RSpec.describe Tantiny::Index do
     it "creates index at path" do
       Tantiny::Index.new(tmpdir) {}
       expect(Dir.entries(tmpdir)).not_to be_empty
+    end
+
+    context "when folder at path does not exist" do
+      it "creates it first" do
+        FileUtils.rm_rf(tmpdir)
+        expect { Tantiny::Index.new(tmpdir) {} }.not_to raise_error
+        expect(Dir.entries(tmpdir)).not_to be_empty
+      end
     end
 
     it "creates schema" do
