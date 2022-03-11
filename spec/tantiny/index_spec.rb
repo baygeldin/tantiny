@@ -28,6 +28,14 @@ RSpec.describe Tantiny::Index do
       expect(Dir.entries(tmpdir)).not_to be_empty
     end
 
+    context "when folder at path does not exist" do
+      it "creates it first" do
+        FileUtils.rm_rf(tmpdir)
+        expect { Tantiny::Index.new(tmpdir) {} }.not_to raise_error
+        expect(Dir.entries(tmpdir)).not_to be_empty
+      end
+    end
+
     it "creates schema" do
       schema = Tantiny::Schema.new(tokenizer, &schema_block)
 

@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require "fileutils"
+
 module Tantiny
   class Index
     DEFAULT_INDEX_SIZE = 50_000_000
@@ -8,6 +10,8 @@ module Tantiny
     def self.new(path, **options, &block)
       index_size = options[:size] || DEFAULT_INDEX_SIZE
       default_tokenizer = options[:tokenizer] || Tokenizer.default
+
+      FileUtils.mkdir_p(path)
 
       schema = Schema.new(default_tokenizer, &block)
 

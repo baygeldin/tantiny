@@ -7,7 +7,6 @@ require "pry"
 require "tantiny"
 
 path = File.join(__dir__, "../tmp")
-FileUtils.mkdir_p(path)
 en_stem = Tantiny::Tokenizer.new(:stemmer, language: :en)
 
 index = Tantiny::Index.new path, tokenizer: en_stem do

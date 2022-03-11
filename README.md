@@ -301,11 +301,7 @@ You may have noticed that `search` method returns only documents ids. This is by
 
 ## Development
 
-After checking out the repo:
-
-Run `cargo build`, then `cp target/debug/libtantiny.so lib/tantiny.so` to complile the rust source.
-
-Then run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake build` to build native extensions, and then `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
 We use [conventional commits](https://www.conventionalcommits.org) to automatically generate the CHANGELOG, bump the semantic version, and to publish and release the gem. All you need to do is stick to the convention and [CI will take care of everything else](https://github.com/baygeldin/tantiny/blob/main/.github/workflows/release.yml) for you.
 
