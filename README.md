@@ -195,7 +195,7 @@ All queries can search on multuple fields (except for `facet_query` because it d
 So, the following query:
 
 ```ruby
-index.term_query(%i[title, description], "hello")
+index.term_query(%i[title description], "hello")
 ```
 
 Is equivalent to:
