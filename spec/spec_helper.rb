@@ -4,6 +4,7 @@ require "simplecov"
 SimpleCov.start if ENV["COVERAGE"]
 
 require "fileutils"
+require "pathname"
 require "tmpdir"
 require "pry"
 

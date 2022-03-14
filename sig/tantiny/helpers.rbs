@@ -2,5 +2,7 @@
 module Tantiny
   module Helpers
     def self.timestamp: ((Date | DateTime) date) -> String
+
+    def self.with_lock: (String lockfile) { (*untyped) -> void } -> void
   end
 end

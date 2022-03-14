@@ -1,23 +1,19 @@
 # frozen_string_literal: true
 
-require "fileutils"
-
 module Tantiny
   class Index
-    DEFAULT_INDEX_SIZE = 50_000_000
+    LOCKFILE = ".tantiny.lock"
+    DEFAULT_WRITER_MEMORY = 5_000_000 # 5MB
     DEFAULT_LIMIT = 10
 
     def self.new(path, **options, &block)
-      index_size = options[:size] || DEFAULT_INDEX_SIZE
-      default_tokenizer = options[:tokenizer] || Tokenizer.default
-
       FileUtils.mkdir_p(path)
 
+      default_tokenizer = options[:tokenizer] || Tokenizer.default
       schema = Schema.new(default_tokenizer, &block)
 
       object = __new(
         path.to_s,
-        index_size,
         schema.default_tokenizer,
         schema.field_tokenizers.transform_keys(&:to_s),
         schema.text_fields.map(&:to_s),
@@ -28,15 +24,40 @@ module Tantiny
         schema.facet_fields.map(&:to_s)
       )
 
-      object.send(:schema=, schema)
+      object.send(:initialize, path, schema, **options)
 
       object
     end
 
+    def initialize(path, schema, **options)
+      @path = path
+      @schema = schema
+
+      @indexer_memory = options[:writer_memory] || DEFAULT_WRITER_MEMORY
+      @exclusive_writer = options[:exclusive_writer] || false
+
+      @active_transaction = Concurrent::ThreadLocalVar.new(false)
+      @transaction_semaphore = Mutex.new
+
+      acquire_index_writer if exclusive_writer?
+    end
+
     attr_reader :schema
 
-    def commit
-      __commit
+    def transaction
+      if inside_transaction?
+        yield
+      else
+        synchronize do
+          open_transaction!
+
+          yield
+
+          close_transaction!
+        end
+      end
+
+      nil
     end
 
     def reload
@@ -44,19 +65,23 @@ module Tantiny
     end
 
     def <<(document)
-      __add_document(
-        resolve(document, schema.id_field).to_s,
-        slice_document(document, schema.text_fields) { |v| v.to_s },
-        slice_document(document, schema.string_fields) { |v| v.to_s },
-        slice_document(document, schema.integer_fields) { |v| v.to_i },
-        slice_document(document, schema.double_fields) { |v| v.to_f },
-        slice_document(document, schema.date_fields) { |v| Helpers.timestamp(v) },
-        slice_document(document, schema.facet_fields) { |v| v.to_s }
-      )
+      transaction do
+        __add_document(
+          resolve(document, schema.id_field).to_s,
+          slice_document(document, schema.text_fields) { |v| v.to_s },
+          slice_document(document, schema.string_fields) { |v| v.to_s },
+          slice_document(document, schema.integer_fields) { |v| v.to_i },
+          slice_document(document, schema.double_fields) { |v| v.to_f },
+          slice_document(document, schema.date_fields) { |v| Helpers.timestamp(v) },
+          slice_document(document, schema.facet_fields) { |v| v.to_s }
+        )
+      end
     end
 
     def delete(id)
-      __delete_document(id.to_s)
+      transaction do
+        __delete_document(id.to_s)
+      end
     end
 
     def search(query, limit: DEFAULT_LIMIT, **smart_query_options)
@@ -83,8 +108,6 @@ module Tantiny
 
     private
 
-    attr_writer :schema
-
     def slice_document(document, fields, &block)
       fields.inject({}) do |hash, field|
         hash.tap { |h| h[field.to_s] = resolve(document, field) }
@@ -93,6 +116,57 @@ module Tantiny
 
     def resolve(document, field)
       document.is_a?(Hash) ? document[field] : document.send(field)
+    end
+
+    def acquire_index_writer
+      __acquire_index_writer(@indexer_memory)
+    rescue TantivyError => e
+      case e.message
+      when /Failed to acquire Lockfile/
+        raise IndexWriterBusyError.new
+      else
+        raise
+      end
+    end
+
+    def release_index_writer
+      __release_index_writer
+    end
+
+    def commit
+      __commit
+    end
+
+    def open_transaction!
+      acquire_index_writer unless exclusive_writer?
+
+      @active_transaction.value = true
+    end
+
+    def close_transaction!
+      commit
+
+      release_index_writer unless exclusive_writer?
+
+      @active_transaction.value = false
+    end
+
+    def inside_transaction?
+      @active_transaction.value
+    end
+
+    def exclusive_writer?
+      @exclusive_writer
+    end
+
+    def synchronize(&block)
+      @transaction_semaphore.synchronize do
+        Helpers.with_lock(lockfile_path, &block)
+      end
+    end
+
+    def lockfile_path
+      @lockfile_path ||= File.join(@path, LOCKFILE)
     end
   end
 end

@@ -7,9 +7,9 @@
 
 Need a fast full-text search for your Ruby script, but Solr and Elasticsearch are an overkill? 😏
 
-You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tantivy](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). It's great for cases when your task at hand requires a full-text search, but configuring a full-blown distributed search engine would take more time than the task itself. And even if you already use such an engine in your project (which is highly likely, actually), it still might be easier to just use Tantiny instead because unlike Solr and Elasticsearch it doesn't need *anything* to work (no separate server or process or whatever), it's purely embeddable. So, when you find yourself in a situation when using your search engine of choice would be tricky/inconvinient or would require additional setup you can always revert back to a quick and dirty solution that is nontheless flexible and fast.
+You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tanti**v**y](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). It's great for cases when your task at hand requires a full-text search, but configuring a full-blown distributed search engine would take more time than the task itself. And even if you already use such an engine in your project (which is highly likely, actually), it still might be easier to just use Tantiny instead because unlike Solr and Elasticsearch it doesn't need *anything* to work (no separate server or process or whatever), it's purely embeddable. So, when you find yourself in a situation when using your search engine of choice would be tricky/inconvinient or would require additional setup you can always revert back to a quick and dirty solution that is nontheless flexible and fast.
 
-Tantiny is not exactly bindings to Tantivy, but it tries to be close. The main philosophy is to provide low-level access to Tantivy's inverted index, but with a nice Ruby-esque API, sensible defaults, and additional functionality sprinkled on top.
+Tantiny is not exactly Ruby bindings to Tantivy, but it tries to be close. The main philosophy is to provide low-level access to Tantivy's inverted index, but with a nice Ruby-esque API, sensible defaults, and additional functionality sprinkled on top.
 
 Take a look at the most basic example:
 
@@ -20,7 +20,6 @@ index << { id: 1, description: "Hello World!" }
 index << { id: 2, description: "What's up?" }
 index << { id: 3, description: "Goodbye World!" }
 
-index.commit
 index.reload
 
 index.search("world") # 1, 3
@@ -91,6 +90,8 @@ rio_bravo = OpenStruct.new(
   release_date: Date.parse("March 18, 1959")
 )
 
+index << rio_bravo
+
 hanabi = {
   imdb_id: "tt0119250",
   type: "/crime/Japan",
@@ -100,6 +101,8 @@ hanabi = {
   rating: 7.7,
   release_date: Date.parse("December 1, 1998")
 }
+
+index << hanabi
 
 brother = {
   imdb_id: "tt0118767",
@@ -111,8 +114,6 @@ brother = {
   release_date: Date.parse("December 12, 1997")
 }
 
-index << rio_bravo
-index << hanabi
 index << brother
 ```
 
@@ -129,11 +130,31 @@ You can also delete it if you want:
 index.delete(rio_bravo.imdb_id)
 ```
 
-After that you need to commit the index for the changes to take place:
+### Transactions
+
+If you need to perform multiple writing operations (i.e. more than one) you should always use `transaction`:
 
 ```ruby
-index.commit
+index.transaction do
+  index << rio_bravo
+  index << hanabi
+  index << brother
+end
 ```
+
+Transactions group changes and [commit](https://docs.rs/tantivy/latest/tantivy/struct.IndexWriter.html#method.commit) them to the index in one go. This is *dramatically* more efficient than performing these changes one by one. In fact, all writing operations (i.e. `<<` and `delete`) are wrapped in a transaction implicitly when you call them outside of a transaction, so calling `<<` 10 times outside of a transaction is the same thing as performing 10 separate transactions. 
+
+### Concurrency and thread-safety
+
+Tantiny is thread-safe meaning that you can safely share a single instance of the index between threads. You can also spawn separate processes that could write to and read from the same index. However, while reading from the index should be parallel, writing to it is **not**. Whenever you call `transaction` or any other operation that modify the index (i.e. `<<` and `delete`) it will lock the index for the duration of the operation or wait for another process or thread to release the lock. The only exception to this is when there is another process with an index with an exclusive writer running somewhere in which case the methods that modify the index will fail immediately.
+
+Thus, it's best to have a single writer process and many reader processes if you want to avoid blocking calls. The proper way to do this is to set `exclusive_writer` to `true` when initializing the index:
+
+```ruby
+index = Tantiny::Index.new("/path/to/index", exclusive_writer: true) {}
+```
+
+This way the [index writer](https://docs.rs/tantivy/latest/tantivy/struct.IndexWriter.html) will only be acquired once which means the memory for it and indexing threads will only be allocated once as well. Otherwise a new index writer is acquired every time you perform a writing operation.
 
 ## Searching
 

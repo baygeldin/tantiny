@@ -3,7 +3,6 @@ mod helpers;
 mod index;
 #[allow(improper_ctypes_definitions)]
 mod query;
-
 #[allow(improper_ctypes_definitions)]
 mod tokenizer;
 

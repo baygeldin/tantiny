@@ -3,9 +3,18 @@
 module Tantiny
   class TantivyError < StandardError; end
 
-  class UnknownField < StandardError
+  class IndexWriterBusyError < StandardError
     def initialize
-      super("Can't find the specified field in the schema.")
+      msg = "Failed to acquire an index writer. "\
+        "Is there an active index with an exclusive writer already?"
+
+      super(msg)
+    end
+  end
+
+  class UnexpectedNone < StandardError
+    def initialize(type)
+      super("Didn't expect Option<#{type}> to be empty.")
     end
   end
 
