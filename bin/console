@@ -7,9 +7,13 @@ require "pry"
 require "tantiny"
 
 path = File.join(__dir__, "../tmp")
-en_stem = Tantiny::Tokenizer.new(:stemmer, language: :en)
 
-index = Tantiny::Index.new path, tokenizer: en_stem do
+options = {
+  tokenizer: Tantiny::Tokenizer.new(:stemmer, language: :en),
+  exclusive_writer: true,
+}
+
+index = Tantiny::Index.new(path, **options) do
   id :imdb_id
   facet :category
   string :title
@@ -49,11 +53,12 @@ brother = {
   release_date: Date.parse("December 12, 1997")
 }
 
-index << rio_bravo
-index << hanabi
-index << brother
+index.transaction do
+  index << rio_bravo
+  index << hanabi
+  index << brother
+end
 
-index.commit 
 index.reload
 
 binding.pry

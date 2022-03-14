@@ -1,6 +1,7 @@
 module Tantiny
   class Index
-    DEFAULT_INDEX_SIZE: Integer
+    LOCKFILE: String
+    DEFAULT_WRITER_MEMORY: Integer
     DEFAULT_LIMIT: Integer
 
     def self.new: (
@@ -10,7 +11,6 @@ module Tantiny
 
     def self.__new: (
       String path,
-      Integer index_size,
       Tokenizer default_tokenizer,
       Hash[String, Tokenizer] field_tokenizers,
       Array[String] text_fields,
@@ -21,9 +21,16 @@ module Tantiny
       Array[String] facet_fields
     ) -> Index
 
+    def initialize: (
+      String path,
+      Schema schema,
+      **untyped options
+    ) -> void
+
     attr_reader schema: Schema
 
-    def commit: () -> void
+    def transaction: () { (*untyped) -> void } -> void
+
     def reload: () -> void
     def <<: (untyped document) -> void
     def delete: (String id) -> void
@@ -62,9 +69,12 @@ module Tantiny
 
     def __search: (Query query, Integer limit) -> Array[String]
 
+    def __acquire_index_writer: (Integer overall_memory) -> void
+    def __release_index_writer: () -> void
+
     private
 
-    attr_writer schema: Schema
+    def commit: () -> void
 
     def slice_document: (
       untyped document,
@@ -78,5 +88,16 @@ module Tantiny
     ) -> Array[String]
 
     def resolve: (untyped document, Symbol field) -> untyped
+
+    def synchronize: () { (*untyped) -> void } -> void
+    def lockfile_path: () -> String
+
+    def exclusive_writer?: () -> bool
+    def acquire_index_writer: () -> void
+    def release_index_writer: () -> void
+
+    def open_transaction!: () -> void
+    def close_transaction!: () -> void
+    def inside_transaction?: () -> bool
   end
 end

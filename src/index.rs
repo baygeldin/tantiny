@@ -11,15 +11,20 @@ use crate::query::{unwrap_query, RTantinyQuery};
 use crate::tokenizer::{unwrap_tokenizer, RTantinyTokenizer};
 
 pub struct TantinyIndex {
-    pub(crate) index_writer: IndexWriter,
-    pub(crate) index_reader: IndexReader,
     pub(crate) schema: Schema,
+    pub(crate) index: Index,
+    pub(crate) index_writer: Option<IndexWriter>,
+    pub(crate) index_reader: IndexReader,
 }
 
 scaffold!(RTantinyIndex, TantinyIndex, "Index");
 
 pub(crate) fn unwrap_index(index: &RTantinyIndex) -> &TantinyIndex {
     index.get_data(&*TANTINY_INDEX_WRAPPER)
+}
+
+pub(crate) fn unwrap_index_mut(index: &mut RTantinyIndex) -> &mut TantinyIndex {
+    index.get_data_mut(&*TANTINY_INDEX_WRAPPER)
 }
 
 #[rustfmt::skip::macros(methods)]
@@ -29,7 +34,6 @@ methods!(
 
     fn new_index(
         path: RString,
-        index_size: Integer,
         default_tokenizer: AnyObject,
         field_tokenizers: Hash,
         text_fields: Array,
@@ -41,7 +45,6 @@ methods!(
     ) -> RTantinyIndex {
         try_unwrap_params!(
             path: String,
-            index_size: i64,
             default_tokenizer: RTantinyTokenizer,
             field_tokenizers: HashMap<String, RTantinyTokenizer>,
             text_fields: Vec<String>,
@@ -103,9 +106,7 @@ methods!(
             tokenizers.register(&field, unwrap_tokenizer(&tokenizer).clone())
         }
 
-        let mut index_writer = index
-            .writer(index_size as usize)
-            .try_unwrap();
+        let index_writer = None;
 
         let index_reader = index
             .reader_builder()
@@ -114,7 +115,7 @@ methods!(
             .try_unwrap();
         
         klass().wrap_data(
-            TantinyIndex { index_writer, index_reader, schema },
+            TantinyIndex { index, index_writer, index_reader, schema },
             &*TANTINY_INDEX_WRAPPER
         )
     }
@@ -138,9 +139,8 @@ methods!(
             facet_fields: HashMap<String, String>
         );
 
-        
         let internal = unwrap_index(&_itself);
-        let index_writer = &internal.index_writer;
+        let index_writer = internal.index_writer.as_ref().try_unwrap();
         let schema = &internal.schema;
 
         let mut doc = Document::default();
@@ -191,7 +191,7 @@ methods!(
         try_unwrap_params!(id: String);
 
         let internal = unwrap_index(&_itself);
-        let index_writer = &internal.index_writer;
+        let index_writer = internal.index_writer.as_ref().unwrap();
 
         let id_field = internal.schema.get_field("id").try_unwrap();
         let doc_id = Term::from_field_text(id_field, &id);
@@ -201,9 +201,34 @@ methods!(
         NilClass::new()
     }
 
+    fn acquire_index_writer(
+        overall_memory: Integer
+    ) -> NilClass {
+        try_unwrap_params!(overall_memory: i64);
+
+        let internal = unwrap_index_mut(&mut _itself);
+
+        let mut index_writer = internal.index
+            .writer(overall_memory as usize)
+            .try_unwrap();
+
+        internal.index_writer = Some(index_writer);
+
+        NilClass::new()
+    }
+
+    fn release_index_writer() -> NilClass {
+        let internal = unwrap_index_mut(&mut _itself);
+
+        drop(internal.index_writer.as_ref().try_unwrap());
+        internal.index_writer = None;
+
+        NilClass::new()
+    }
+
     fn commit() -> NilClass {
-        let internal = _itself.get_data_mut(&*TANTINY_INDEX_WRAPPER);
-        let index_writer = &mut internal.index_writer;
+        let internal = unwrap_index_mut(&mut _itself);
+        let index_writer = internal.index_writer.as_mut().try_unwrap();
 
         index_writer.commit().try_unwrap();
 
@@ -254,6 +279,8 @@ pub(super) fn init() {
         klass.def_self("__new", new_index);
         klass.def("__add_document", add_document);
         klass.def("__delete_document", delete_document);
+        klass.def("__acquire_index_writer", acquire_index_writer);
+        klass.def("__release_index_writer", release_index_writer);
         klass.def("__commit", commit);
         klass.def("__reload", reload);
         klass.def("__search", search);

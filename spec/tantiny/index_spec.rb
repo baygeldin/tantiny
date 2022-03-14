@@ -2,10 +2,11 @@
 
 RSpec.describe Tantiny::Index do
   subject(:index) do
-    Tantiny::Index.new(tmpdir, tokenizer: tokenizer, &schema_block)
+    Tantiny::Index.new(tmpdir, **options, &schema_block)
   end
 
   let(:tmpdir) { Dir.mktmpdir }
+  let(:options) { {tokenizer: tokenizer} }
   let(:schema_block) { proc {} }
   let(:tokenizer) { Tantiny::Tokenizer.default }
 
@@ -17,9 +18,12 @@ RSpec.describe Tantiny::Index do
     index.search(index.all_query)
   end
 
-  def commit_and_reload
-    index.commit
-    index.reload
+  describe "panics" do
+    it "doesn't panic when Option<T> is None" do
+      expect {
+        index.__add_document("tmp", {"unkown_field" => "whatever"}, {}, {}, {}, {}, {})
+      }.to raise_error(Tantiny::UnexpectedNone)
+    end
   end
 
   describe "::new" do
@@ -45,6 +49,87 @@ RSpec.describe Tantiny::Index do
       index = Tantiny::Index.new(tmpdir, tokenizer: tokenizer, &schema_block)
 
       expect(index.schema).to eq(schema)
+    end
+
+    context "when exclusive_writer is true" do
+      let(:options) { {exclusive_writer: true} }
+
+      it "doesn't need to acquire an index writer on every change" do
+        expect(index).not_to receive(:acquire_index_writer)
+
+        index << {id: 1}
+        index << {id: 2}
+      end
+    end
+  end
+
+  describe ".transaction" do
+    let(:mutex) { index.instance_variable_get(:@transaction_semaphore) }
+
+    it "synchronizes block execution between threads" do
+      collaborator_1 = double("Collaborator 1")
+      collaborator_2 = double("Collaborator 2")
+
+      allow(mutex).to receive(:synchronize) do |&block|
+        collaborator_1.enter_mutex
+        block.call
+        collaborator_1.leave_mutex
+      end
+
+      expect(collaborator_1).to receive(:enter_mutex).ordered
+      expect(collaborator_2).to receive(:hello).ordered
+      expect(collaborator_1).to receive(:leave_mutex).ordered
+
+      index.transaction { collaborator_2.hello }
+    end
+
+    it "synchronizes block execution between processes" do
+      collaborator_1 = double("Collaborator 1")
+      collaborator_2 = double("Collaborator 2")
+
+      allow(Tantiny::Helpers).to receive(:with_lock) do |&block|
+        collaborator_1.lock
+        block.call
+        collaborator_1.unlock
+      end
+
+      expect(collaborator_1).to receive(:lock).ordered
+      expect(collaborator_2).to receive(:hello).ordered
+      expect(collaborator_1).to receive(:unlock).ordered
+
+      index.transaction { collaborator_2.hello }
+    end
+
+    context "when inside a transaction" do
+      it "simply executes the block without synchronization" do
+        collaborator = double("Collaborator")
+
+        expect(mutex).to receive(:synchronize).and_call_original.once
+        expect(collaborator).to receive(:hello)
+
+        index.transaction do
+          index.transaction { collaborator.hello }
+        end
+      end
+    end
+
+    context "when another index holds exclusive writer" do
+      it "raises an error" do
+        collaborator = double("Collaborator")
+
+        Tantiny::Index.new(tmpdir, exclusive_writer: true, &schema_block)
+
+        expect {
+          index.transaction { collaborator.hello }
+        }.to raise_error(Tantiny::IndexWriterBusyError)
+      end
+    end
+
+    it "commits the changes" do
+      index.transaction { index << {id: "hello"} }
+      index.reload
+
+      expect(index.search(index.all_query)).to contain_exactly("hello")
     end
   end
 
@@ -75,7 +160,7 @@ RSpec.describe Tantiny::Index do
 
     it "maps fields according to schema" do
       index << movie
-      commit_and_reload
+      index.reload
 
       imdb_id = movie[:imdb_id]
 
@@ -96,7 +181,7 @@ RSpec.describe Tantiny::Index do
 
     it "allows empty fields" do
       index << movie.slice(:imdb_id, :title)
-      commit_and_reload
+      index.reload
 
       query = index.term_query(:title, "Hana-bi")
 
@@ -105,33 +190,26 @@ RSpec.describe Tantiny::Index do
 
     it "works with any object" do
       index << OpenStruct.new(movie)
-      commit_and_reload
+      index.reload
 
       query = index.term_query(:title, "Hana-bi")
 
       expect(index.search(query).first).to eq(movie[:imdb_id])
     end
 
-    it "raises error for unkown fields" do
-      expect {
-        # Currently this is the only way to cause the error.
-        index.__add_document("tmp", {"unkown_field" => "whatever"}, {}, {}, {}, {}, {})
-      }.to raise_error(Tantiny::UnknownField)
-    end
-  end
+    it "wraps itself in a transaction" do
+      expect(index).to receive(:transaction).and_call_original
 
-  describe ".commit" do
-    it "commits the index" do
-      index << {id: 1}
+      index << movie
+      index.reload
 
-      expect { index.commit }.not_to raise_error
+      expect(index.search(index.all_query)).not_to be_empty
     end
   end
 
   describe ".reload" do
     it "reloads the index" do
       index << {id: 1}
-      index.commit
 
       expect { index.reload }.to change { documents }.from([]).to(%w[1])
     end
@@ -140,20 +218,31 @@ RSpec.describe Tantiny::Index do
   describe ".delete" do
     it "deletes an already commited document" do
       index << {id: "kek"}
-      commit_and_reload
+      index.reload
 
       expect {
         index.delete("kek")
-        commit_and_reload
+        index.reload
       }.to change { documents }.from(%w[kek]).to([])
     end
 
     it "deletes uncommited document" do
       index << {id: "kek"}
       index.delete("kek")
-      commit_and_reload
+      index.reload
 
       expect(documents).to be_empty
+    end
+
+    it "wraps itself in a transaction" do
+      index << {id: "kek"}
+
+      expect(index).to receive(:transaction).and_call_original
+
+      index.delete("kek")
+      index.reload
+
+      expect(index.search(index.all_query)).to be_empty
     end
   end
 
@@ -161,8 +250,11 @@ RSpec.describe Tantiny::Index do
     let(:schema_block) { proc { text :description } }
 
     before do
-      (1..10).each { |id| index << {id: id, description: "hello"} }
-      commit_and_reload
+      index.transaction do
+        (1..10).each { |id| index << {id: id, description: "hello"} }
+      end
+
+      index.reload
     end
 
     context "when query is a query object" do

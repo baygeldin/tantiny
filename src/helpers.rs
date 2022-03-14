@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use rutie::{AnyException, Array, Exception, RString, Hash, Integer, Float, Boolean, Module};
-use tantivy::schema::{Field};
 use tantivy::tokenizer::Language;
 
 // Macro dependencies:
@@ -114,12 +113,15 @@ where
     }
 }
 
-impl TryUnwrap<Field> for Option<Field> {
-    fn try_unwrap(self) -> Field {
+impl<T> TryUnwrap<T> for Option<T> {
+    fn try_unwrap(self) -> T {
         if let Some(value) = self {
             value
         } else {
-            VM::raise_ex(AnyException::new("Tantiny::UnknownField", None));
+            VM::raise_ex(AnyException::new(
+                "Tantiny::UnexpectedNone",
+                Some(&*format!("{}", std::any::type_name::<T>())))
+            );
 
             self.unwrap()
         }

@@ -4,6 +4,8 @@ require "ruby-next/language/setup"
 RubyNext::Language.setup_gem_load_path
 
 require "rutie"
+require "concurrent"
+require "fileutils"
 
 require "tantiny/version"
 require "tantiny/errors"

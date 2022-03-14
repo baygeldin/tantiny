@@ -48,4 +48,5 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "rutie", "~> 0.0.4"
   spec.add_runtime_dependency "thermite", "~> 0"
   spec.add_runtime_dependency "rake", "~> 13.0"
+  spec.add_runtime_dependency "concurrent-ruby", "~> 1.0"
 end

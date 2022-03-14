@@ -5,7 +5,7 @@ RSpec.describe Tantiny::Query do
     en_stemmer = Tantiny::Tokenizer.new(:stemmer)
 
     @tmpdir = Dir.mktmpdir
-    @index = Tantiny::Index.new(@tmpdir) do
+    @index = Tantiny::Index.new(@tmpdir, exclusive_writer: true) do
       facet :facet
       string :string
       text :text
@@ -21,13 +21,17 @@ RSpec.describe Tantiny::Query do
   end
 
   def add_documents(*docs)
-    docs.each { |d| @index << d }
-    @index.commit
+    @index.transaction do
+      docs.each { |d| @index << d }
+    end
+
     @index.reload
   end
 
   def delete_documents(*docs)
-    docs.each { |d| @index.delete(d) }
+    @index.transaction do
+      docs.each { |d| @index.delete(d) }
+    end
   end
 
   def search(query)
