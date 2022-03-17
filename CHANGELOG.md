@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.3.1](https://github.com/baygeldin/tantiny/compare/v0.3.0...v0.3.1) (2022-03-17)
+
+
+### Bug Fixes
+
+* Fix native extensions build on Ruby <= 3.1 ([f801ef3](https://github.com/baygeldin/tantiny/commit/f801ef38db4ec164c28c27a309b215ad67e63b5c))
+
 ## [0.3.0](https://github.com/baygeldin/tantiny/compare/v0.2.2...v0.3.0) (2022-03-17)
 
 
