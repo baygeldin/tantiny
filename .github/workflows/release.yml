@@ -106,4 +106,4 @@ jobs:
     - name: Try installing without Cargo
       run: |
         gem uninstall tantiny
-        CARGO=fake gem install t
+        CARGO=fake gem install tantiny
