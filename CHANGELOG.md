@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.3.0](https://github.com/baygeldin/tantiny/compare/v0.2.2...v0.3.0) (2022-03-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* `commit` method is no longer public
+
+### Features
+
+* Support multithreaded and multiprocess environments ([053b4a0](https://github.com/baygeldin/tantiny/commit/053b4a0a026ae8fd689d95a8d4f3b1a7b6d6779f))
+
+
+### Bug Fixes
+
+* Create the folder at index path when it doesn't exist ([c9446b7](https://github.com/baygeldin/tantiny/commit/c9446b7e949aad40de9ce179707a88915682055c))
+
 ### [0.2.2](https://github.com/baygeldin/tantiny/compare/v0.2.1...v0.2.2) (2022-03-07)
 
 
