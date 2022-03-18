@@ -37,7 +37,3 @@
 ### Features
 
 * Initial release ([f10ed87](https://github.com/baygeldin/tantiny/commit/f10ed878e0b781580d5a04d854c44e6b868621b1))
-
-### [0.2.0] (2022-03-07)
-
-- Dummy release
