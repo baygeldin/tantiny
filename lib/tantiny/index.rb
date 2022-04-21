@@ -97,12 +97,7 @@ module Tantiny
     Query::TYPES.each do |query_type|
       method_name = "#{query_type}_query"
       define_method(method_name) do |*args, **kwargs|
-        # Ruby 2.6 fix (https://www.ruby-lang.org/en/news/2019/12/12/separation-of-positional-and-keyword-arguments-in-ruby-3-0/)
-        if kwargs.empty?
-          Query.send(method_name, self, *args)
-        else
-          Query.send(method_name, self, *args, **kwargs)
-        end
+        Query.send(method_name, self, *args, **kwargs)
       end
     end
 

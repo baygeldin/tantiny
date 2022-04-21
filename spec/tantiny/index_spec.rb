@@ -293,10 +293,11 @@ RSpec.describe Tantiny::Index do
     describe ".#{method_name}" do
       it "forwards args to Query" do
         any_args = [1, 2, 3]
+        any_kwargs = {foo: :bar}
 
-        expect(Tantiny::Query).to receive(method_name).with(index, *any_args)
+        expect(Tantiny::Query).to receive(method_name).with(index, *any_args, **any_kwargs)
 
-        index.send(method_name, *any_args)
+        index.send(method_name, *any_args, **any_kwargs)
       end
     end
   end
