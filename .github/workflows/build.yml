@@ -8,13 +8,18 @@ on:
     branches:
       - main
 
+env:
+  DEFAULT_RUBY: 3.1
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        ruby: ['2.6', '3.1']
+        ruby:
+        - 2.6
+        - 3.1
 
     steps:
     - uses: actions/checkout@v2
@@ -38,8 +43,10 @@ jobs:
     - name: Build crate
       run: bundle exec rake build
     - name: Lint source code with with RuboCop
+      if: ${{ matrix.ruby == env.DEFAULT_RUBY }}
       run: bundle exec rake rubocop
     - name: Verify static types with Steep
+      if: ${{ matrix.ruby == env.DEFAULT_RUBY }}
       run: bundle exec rake steep
     - name: Transpile source source with RubyNext
       run: bundle exec rake nextify
