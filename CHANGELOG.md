@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.3.2](https://github.com/baygeldin/tantiny/compare/v0.3.1...v0.3.2) (2022-04-21)
+
+
+### Bug Fixes
+
+* Fix the native extension for OSX ([4026e8f](https://github.com/baygeldin/tantiny/commit/4026e8fad4179b100abc89d7f6aa2203232c9322))
+
 ### [0.3.1](https://github.com/baygeldin/tantiny/compare/v0.3.0...v0.3.1) (2022-03-17)
 
 
