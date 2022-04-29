@@ -1,5 +1,12 @@
 # Changelog
 
+### [0.3.3](https://github.com/baygeldin/tantiny/compare/v0.3.2...v0.3.3) (2022-04-29)
+
+
+### Bug Fixes
+
+* Require native extension through Thermite::Fiddle ([da4cb44](https://github.com/baygeldin/tantiny/commit/da4cb44438f9bdeb604fbe57ff595f552fdf1c8c))
+
 ### [0.3.2](https://github.com/baygeldin/tantiny/compare/v0.3.1...v0.3.2) (2022-04-21)
 
 
