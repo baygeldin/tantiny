@@ -1,5 +1,10 @@
 require "thermite/tasks"
 
-project_dir = File.dirname(File.dirname(__FILE__)) # rubocop:disable Style/NestedFileDirname
-Thermite::Tasks.new(cargo_project_path: project_dir, ruby_project_path: project_dir)
+project_dir = File.expand_path("../..", __FILE__)
+
+Thermite::Tasks.new(
+  cargo_project_path: project_dir,
+  ruby_project_path: project_dir
+)
+
 task default: %w[thermite:build]
