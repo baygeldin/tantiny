@@ -220,7 +220,7 @@ methods!(
     fn release_index_writer() -> NilClass {
         let internal = unwrap_index_mut(&mut _itself);
 
-        drop(internal.index_writer.as_ref().try_unwrap());
+        let _ = internal.index_writer.as_ref().try_unwrap();
         internal.index_writer = None;
 
         NilClass::new()

@@ -47,7 +47,7 @@ Or install it yourself as:
 You don't **have to** have Rust installed on your system since Tantiny will try to download the pre-compiled binaries hosted on GitHub releases during the installation. However, if no pre-compiled binaries were found for your system (which is a combination of platform, architecture, and Ruby version) you will need to [install Rust](https://www.rust-lang.org/tools/install) first.
 
 > [!WARNING]
-> Only Rust versions up to `1.77.0` are supported. See [this issue](https://github.com/baygeldin/tantiny/issues/21) for more details.
+> Only Rust versions up to `1.77` are supported. See [this issue](https://github.com/baygeldin/tantiny/issues/21) for more details.
 
 > [!IMPORTANT]
 > Please, make sure to specify the minor version when declaring dependency on `tantiny`. The API is a subject to change, and until it reaches `1.0.0` a bump in the minor version will most likely signify a breaking change.
