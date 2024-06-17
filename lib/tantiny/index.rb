@@ -103,10 +103,10 @@ module Tantiny
 
     private
 
-    def slice_document(document, fields, &block)
+    def slice_document(document, fields, &)
       fields.inject({}) do |hash, field|
         hash.tap { |h| h[field.to_s] = resolve(document, field) }
-      end.compact.transform_values(&block)
+      end.compact.transform_values(&)
     end
 
     def resolve(document, field)

@@ -5,7 +5,7 @@ module Tantiny
 
   class IndexWriterBusyError < StandardError
     def initialize
-      msg = "Failed to acquire an index writer. "\
+      msg = "Failed to acquire an index writer. " \
         "Is there an active index with an exclusive writer already?"
 
       super(msg)
