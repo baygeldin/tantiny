@@ -12,7 +12,7 @@ module Tantiny
       :facet_fields,
       :field_tokenizers
 
-    def initialize(tokenizer, &block)
+    def initialize(tokenizer, &)
       @default_tokenizer = tokenizer
       @id_field = :id
       @text_fields = []
@@ -23,7 +23,7 @@ module Tantiny
       @facet_fields = []
       @field_tokenizers = {}
 
-      instance_exec(&block)
+      instance_exec(&)
     end
 
     def tokenizer_for(field)
