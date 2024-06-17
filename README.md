@@ -3,6 +3,9 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/maintainability)](https://codeclimate.com/github/baygeldin/tantiny/maintainability)
 [![Test Coverage](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/test_coverage)](https://codeclimate.com/github/baygeldin/tantiny/test_coverage)
 
+> [!WARNING]
+> The gem is not currently maintained and the development is put on hold. If you're interested in taking over, feel free to reach out to me.
+
 # Tantiny
 
 Need a fast full-text search for your Ruby script, but Solr and Elasticsearch are an overkill? 😏
@@ -43,9 +46,11 @@ Or install it yourself as:
 
 You don't **have to** have Rust installed on your system since Tantiny will try to download the pre-compiled binaries hosted on GitHub releases during the installation. However, if no pre-compiled binaries were found for your system (which is a combination of platform, architecture, and Ruby version) you will need to [install Rust](https://www.rust-lang.org/tools/install) first.
 
-⚠️ **IMPORTANT** ⚠️
+> [!WARNING]
+> Only Rust versions up to `1.77.0` are supported. See [this issue](https://github.com/baygeldin/tantiny/issues/21) for more details.
 
-Please, make sure to specify the minor version when declaring dependency on `tantiny`. The API is a subject to change, and until it reaches `1.0.0` a bump in the minor version will most likely signify a breaking change. 
+> [!IMPORTANT]
+> Please, make sure to specify the minor version when declaring dependency on `tantiny`. The API is a subject to change, and until it reaches `1.0.0` a bump in the minor version will most likely signify a breaking change.
 
 ## Defining the index
 
