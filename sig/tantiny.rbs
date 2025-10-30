@@ -1,5 +1,0 @@
-module Tantiny
-    type date = Date | DateTime
-    type numeric = Integer | Float
-    type fields = Array[Symbol] | Symbol
-end

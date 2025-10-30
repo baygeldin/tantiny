@@ -3,17 +3,18 @@
 module Tantiny
   class Index
     LOCKFILE = ".tantiny.lock"
-    DEFAULT_WRITER_MEMORY = 5_000_000 # 5MB
+    DEFAULT_WRITER_MEMORY = 15_000_000 # 15MB
     DEFAULT_LIMIT = 10
 
-    def self.new(path, **options, &block)
-      FileUtils.mkdir_p(path)
+    def self.new(path = nil, **options, &block)
+      # Only create directory if path is provided
+      FileUtils.mkdir_p(path) if path
 
       default_tokenizer = options[:tokenizer] || Tokenizer.default
       schema = Schema.new(default_tokenizer, &block)
 
       object = __new(
-        path.to_s,
+        path&.to_s,
         schema.default_tokenizer,
         schema.field_tokenizers.transform_keys(&:to_s),
         schema.text_fields.map(&:to_s),
@@ -43,6 +44,10 @@ module Tantiny
     end
 
     attr_reader :schema
+
+    def in_memory?
+      @path.nil?
+    end
 
     def transaction
       if inside_transaction?
@@ -115,9 +120,9 @@ module Tantiny
 
     def acquire_index_writer
       __acquire_index_writer(@indexer_memory)
-    rescue TantivyError => e
+    rescue RuntimeError => e
       case e.message
-      when /Failed to acquire Lockfile/
+      when /Failed to acquire Lockfile/, /LockBusy/
         raise IndexWriterBusyError.new
       else
         raise
@@ -155,13 +160,18 @@ module Tantiny
     end
 
     def synchronize(&block)
-      @transaction_semaphore.synchronize do
-        Helpers.with_lock(lockfile_path, &block)
+      # In-memory indexes don't need file locking
+      if in_memory?
+        @transaction_semaphore.synchronize(&block)
+      else
+        @transaction_semaphore.synchronize do
+          Helpers.with_lock(lockfile_path, &block)
+        end
       end
     end
 
     def lockfile_path
-      @lockfile_path ||= File.join(@path, LOCKFILE)
+      @lockfile_path ||= @path && File.join(@path, LOCKFILE)
     end
   end
 end

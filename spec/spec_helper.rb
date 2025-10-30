@@ -7,6 +7,7 @@ require "fileutils"
 require "pathname"
 require "tmpdir"
 require "pry"
+require "ostruct"
 
 require "tantiny"
 

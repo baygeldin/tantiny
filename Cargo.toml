@@ -6,13 +6,15 @@ authors = ["Alexander Baygeldin"]
 repository = "https://github.com/baygeldin/tantiny"
 
 [lib]
+name = "tantiny"
 crate-type = ["cdylib"]
 
 [dependencies]
-rutie = "0.8"
-tantivy = "0.16"
+magnus = { version = "0.8", features = ["rb-sys"] }
+tantivy = "0.25"
 lazy_static = "1.4"
 paste = "1.0"
+time = { version = "0.3", features = ["parsing", "formatting"] }
 
 [package.metadata.thermite]
 github_releases = true

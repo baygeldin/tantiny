@@ -9,7 +9,7 @@ on:
       - main
 
 env:
-  DEFAULT_RUBY: 3.1
+  DEFAULT_RUBY: 3.4
 
 jobs:
   build:
@@ -18,45 +18,45 @@ jobs:
     strategy:
       matrix:
         ruby:
-        - 3.1
+          - 3.4
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: ruby/setup-ruby@v1
-      with:
-        ruby-version: ${{ matrix.ruby }}
-        bundler-cache: true
-    - uses: actions-rust-lang/setup-rust-toolchain@v1
-      with:
-        toolchain: '1.77'
-    - name: Install dependencies
-      run: bundle install
-    - name: Cache crate
-      uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: cargo-${{ hashFiles('**/Cargo.lock') }}-ruby-${{ matrix.ruby }}
-    - name: Build crate
-      run: bundle exec rake build
-    - name: Lint source code with with RuboCop
-      if: ${{ matrix.ruby == env.DEFAULT_RUBY }}
-      run: bundle exec rake rubocop
-    - name: Verify static types with Steep
-      if: ${{ matrix.ruby == env.DEFAULT_RUBY }}
-      run: bundle exec rake steep
-    - name: Transpile source source with RubyNext
-      run: bundle exec rake nextify
-    - name: Run specs with RSpec
-      if: ${{ github.ref != 'refs/heads/main' }}
-      run: bundle exec rake spec
-    - name: Run specs with RSpec and upload test coverage
-      if: ${{ github.ref == 'refs/heads/main' }}
-      uses: paambaati/codeclimate-action@v3.0.0
-      env:
-        CC_TEST_REPORTER_ID: "${{ secrets.CODECLIMATE_TEST_REPORTER_ID }}"
-        COVERAGE: true
-      with:
-        coverageCommand: bundle exec rake spec
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+          bundler-cache: true
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: "1.77"
+      - name: Install dependencies
+        run: bundle install
+      - name: Cache crate
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ hashFiles('**/Cargo.lock') }}-ruby-${{ matrix.ruby }}
+      - name: Build crate
+        run: bundle exec rake build
+      - name: Lint source code with with RuboCop
+        if: ${{ matrix.ruby == env.DEFAULT_RUBY }}
+        run: bundle exec rake rubocop
+      - name: Verify static types with Steep
+        if: ${{ matrix.ruby == env.DEFAULT_RUBY }}
+        run: bundle exec rake steep
+      - name: Transpile source source with RubyNext
+        run: bundle exec rake nextify
+      - name: Run specs with RSpec
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: bundle exec rake spec
+      - name: Run specs with RSpec and upload test coverage
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: paambaati/codeclimate-action@v3.0.0
+        env:
+          CC_TEST_REPORTER_ID: "${{ secrets.CODECLIMATE_TEST_REPORTER_ID }}"
+          COVERAGE: true
+        with:
+          coverageCommand: bundle exec rake spec

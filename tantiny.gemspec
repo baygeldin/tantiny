@@ -26,8 +26,6 @@ Gem::Specification.new do |spec|
     Dir.glob("bin/**/*"),
     Dir.glob("ext/**/*"),
     Dir.glob("lib/**/*"),
-    Dir.glob("lib/.rbnext/**/*"),
-    Dir.glob("sig/**/*"),
     Dir.glob("src/**/*"),
     "Cargo.toml",
     "README.md",
@@ -39,14 +37,10 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
-  if ENV["RELEASING_GEM"].nil? && File.directory?(File.join(__dir__, ".git"))
-    spec.add_runtime_dependency "ruby-next", "~> 0.14.0"
-  else
-    spec.add_runtime_dependency "ruby-next-core", "~> 0.14.0"
-  end
-
-  spec.add_runtime_dependency "rutie", "~> 0.0.4"
   spec.add_runtime_dependency "thermite", "~> 0"
   spec.add_runtime_dependency "rake", "~> 13.0"
   spec.add_runtime_dependency "concurrent-ruby", "~> 1.0"
+  spec.add_runtime_dependency "rexml"
+  spec.add_runtime_dependency "fiddle"
+  spec.add_runtime_dependency "ostruct"
 end

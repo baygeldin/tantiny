@@ -1,14 +1,17 @@
 mod helpers;
-#[allow(improper_ctypes_definitions)]
 mod index;
-#[allow(improper_ctypes_definitions)]
 mod query;
-#[allow(improper_ctypes_definitions)]
 mod tokenizer;
 
-#[no_mangle]
-pub extern "C" fn Init_tantiny() {
-    index::init();
-    query::init();
-    tokenizer::init();
+use magnus::{Error, Ruby};
+
+#[magnus::init]
+fn init(ruby: &Ruby) -> Result<(), Error> {
+    let module = ruby.define_module("Tantiny")?;
+
+    index::init(ruby, module)?;
+    query::init(ruby, module)?;
+    tokenizer::init(ruby, module)?;
+
+    Ok(())
 }

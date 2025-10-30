@@ -1,94 +1,81 @@
+use magnus::{Error, Module, Object, RModule, Ruby};
+use tantivy::tokenizer::{
+    LowerCaser, NgramTokenizer, RemoveLongFilter, SimpleTokenizer, Stemmer, TextAnalyzer,
+};
 
-use rutie::{methods, Object, Array, RString, Integer, Boolean};
-use tantivy::tokenizer::{TextAnalyzer, SimpleTokenizer, RemoveLongFilter, LowerCaser, Stemmer, NgramTokenizer};
+use crate::helpers::LanguageWrapper;
 
-use crate::helpers::{try_unwrap_params, scaffold, TryUnwrap, LanguageWrapper};
+#[magnus::wrap(class = "Tantiny::Tokenizer", free_immediately, size)]
+pub struct Tokenizer(TextAnalyzer);
 
-pub struct TantinyTokenizer(pub(crate) TextAnalyzer);
-
-scaffold!(RTantinyTokenizer, TantinyTokenizer, "Tokenizer");
-
-fn wrap_tokenizer(tokenizer: TextAnalyzer) -> RTantinyTokenizer {
-    klass().wrap_data(
-        TantinyTokenizer(tokenizer),
-        &*TANTINY_TOKENIZER_WRAPPER
-    )
-}
-
-pub(crate) fn unwrap_tokenizer(tokenizer: &RTantinyTokenizer) -> &TextAnalyzer {
-    &tokenizer.get_data(&*TANTINY_TOKENIZER_WRAPPER).0
-}
-
-#[rustfmt::skip::macros(methods)]
-methods!(
-    RTantinyTokenizer,
-    _itself,
-
-    fn new_simple_tokenizer() -> RTantinyTokenizer {
-        let tokenizer = TextAnalyzer::from(SimpleTokenizer)
-            .filter(RemoveLongFilter::limit(40))
-            .filter(LowerCaser);
-
-        wrap_tokenizer(tokenizer)
+impl Tokenizer {
+    pub fn get_analyzer(&self) -> TextAnalyzer {
+        self.0.clone()
     }
 
-    fn new_stemmer_tokenizer(locale_code: RString) -> RTantinyTokenizer {
-        try_unwrap_params!(locale_code: String);
-
-        let language: LanguageWrapper = locale_code.parse().try_unwrap();
-        let tokenizer = TextAnalyzer::from(SimpleTokenizer)
+    fn new_simple() -> Result<Self, Error> {
+        let tokenizer = TextAnalyzer::builder(SimpleTokenizer::default())
             .filter(RemoveLongFilter::limit(40))
             .filter(LowerCaser)
-            .filter(Stemmer::new(language.0));
-
-        wrap_tokenizer(tokenizer)
+            .build();
+        Ok(Tokenizer(tokenizer))
     }
 
-    fn new_ngram_tokenizer(
-        min_gram: Integer,
-        max_gram: Integer,
-        prefix_only: Boolean
-    ) -> RTantinyTokenizer {
-        try_unwrap_params!(
-            min_gram: i64,
-            max_gram: i64,
-            prefix_only: bool
-        );
-
-        let tokenizer = NgramTokenizer::new(
-            min_gram as usize,
-            max_gram as usize,
-            prefix_only
-        );
-
-        wrap_tokenizer(TextAnalyzer::from(tokenizer))
+    fn new_stemmer(language: String) -> Result<Self, Error> {
+        let lang_wrapper = LanguageWrapper::try_from(language)?;
+        let tokenizer = TextAnalyzer::builder(SimpleTokenizer::default())
+            .filter(RemoveLongFilter::limit(40))
+            .filter(LowerCaser)
+            .filter(Stemmer::new(lang_wrapper.0))
+            .build();
+        Ok(Tokenizer(tokenizer))
     }
 
-    fn extract_terms(text: RString) -> Array {
-        try_unwrap_params!(text: String);
+    fn new_ngram(min_gram: i64, max_gram: i64, prefix_only: bool) -> Result<Self, Error> {
+        let ruby = unsafe { Ruby::get_unchecked() };
+        let tokenizer = NgramTokenizer::new(min_gram as usize, max_gram as usize, prefix_only)
+            .map_err(|e| {
+                Error::new(
+                    ruby.exception_runtime_error(),
+                    format!("Failed to create ngram tokenizer: {}", e),
+                )
+            })?;
 
-        let mut token_stream = unwrap_tokenizer(&_itself).token_stream(&text);
-        let mut terms = vec![];
+        Ok(Tokenizer(TextAnalyzer::builder(tokenizer).build()))
+    }
+
+    fn extract_terms(&self, text: String) -> Result<Vec<String>, Error> {
+        let mut cloned_analyzer = self.0.clone();
+        let mut token_stream = cloned_analyzer.token_stream(&text);
+        let mut terms = Vec::new();
 
         while token_stream.advance() {
-            terms.push(token_stream.token().clone().text);
+            terms.push(token_stream.token().text.clone());
         }
 
-        let mut array = Array::with_capacity(terms.len());
-
-        for term in terms {
-            array.push(RString::from(term));
-        }
-
-        array
+        Ok(terms)
     }
-);
+}
 
-pub(super) fn init() {
-    klass().define(|klass| {
-        klass.def_self("__new_simple_tokenizer", new_simple_tokenizer);
-        klass.def_self("__new_stemmer_tokenizer", new_stemmer_tokenizer);
-        klass.def_self("__new_ngram_tokenizer", new_ngram_tokenizer);
-        klass.def("__extract_terms", extract_terms);
-    });
-} 
+pub fn init(ruby: &Ruby, module: RModule) -> Result<(), Error> {
+    let class = module.define_class("Tokenizer", ruby.class_object())?;
+
+    class.define_singleton_method(
+        "__new_simple_tokenizer",
+        magnus::function!(Tokenizer::new_simple, 0),
+    )?;
+    class.define_singleton_method(
+        "__new_stemmer_tokenizer",
+        magnus::function!(Tokenizer::new_stemmer, 1),
+    )?;
+    class.define_singleton_method(
+        "__new_ngram_tokenizer",
+        magnus::function!(Tokenizer::new_ngram, 3),
+    )?;
+    class.define_method(
+        "__extract_terms",
+        magnus::method!(Tokenizer::extract_terms, 1),
+    )?;
+
+    Ok(())
+}

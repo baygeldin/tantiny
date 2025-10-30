@@ -20,23 +20,50 @@ RSpec.describe Tantiny::Index do
 
   describe "panics" do
     it "doesn't panic when Option<T> is None" do
-      expect {
-        index.__add_document("tmp", {"unkown_field" => "whatever"}, {}, {}, {}, {}, {})
-      }.to raise_error(Tantiny::UnexpectedNone)
+      # This test verifies that unknown fields are handled gracefully
+      # rather than causing a Rust panic
+      index.transaction do
+        expect {
+          index.__add_document("tmp", {"unkown_field" => "whatever"}, {}, {}, {}, {}, {})
+        }.to raise_error(RuntimeError, /Failed to get field/)
+      end
     end
   end
 
   describe "::new" do
-    it "creates index at path" do
-      Tantiny::Index.new(tmpdir) {}
-      expect(Dir.entries(tmpdir)).not_to be_empty
+    context "when path is provided" do
+      it "creates index at path" do
+        Tantiny::Index.new(tmpdir) {}
+        expect(Dir.entries(tmpdir)).not_to be_empty
+      end
+
+      context "when folder at path does not exist" do
+        it "creates it first" do
+          FileUtils.rm_rf(tmpdir)
+          expect { Tantiny::Index.new(tmpdir) {} }.not_to raise_error
+          expect(Dir.entries(tmpdir)).not_to be_empty
+        end
+      end
     end
 
-    context "when folder at path does not exist" do
-      it "creates it first" do
-        FileUtils.rm_rf(tmpdir)
-        expect { Tantiny::Index.new(tmpdir) {} }.not_to raise_error
-        expect(Dir.entries(tmpdir)).not_to be_empty
+    context "when no path is provided" do
+      it "creates an in-memory index" do
+        index = Tantiny::Index.new { text :title }
+        expect(index.in_memory?).to be true
+      end
+
+      it "can add and search documents" do
+        index = Tantiny::Index.new { text :title }
+        index << {id: "1", title: "Test Document"}
+        index.reload
+        results = index.search(index.all_query)
+        expect(results).to eq(["1"])
+      end
+
+      it "does not use file locking" do
+        index = Tantiny::Index.new { text :title }
+        expect(Tantiny::Helpers).not_to receive(:with_lock)
+        index << {id: "1", title: "Test"}
       end
     end
 
