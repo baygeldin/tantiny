@@ -14,7 +14,7 @@ require "tantiny/index"
 
 module Tantiny
   project_dir = File.expand_path("../..", __FILE__)
-  
+
   # Try multiple possible locations for the library
   lib_paths = [
     File.join(project_dir, "target", "release", "libtantiny.dylib"),
@@ -25,15 +25,14 @@ module Tantiny
     File.join(project_dir, "lib", "tantiny.so"),
     File.join(project_dir, "lib", "tantiny.dylib")
   ]
-  
+
   lib_path = lib_paths.find { |path| File.exist?(path) }
-  
+
   if lib_path.nil?
-    raise LoadError, "Could not find tantiny library in any of: #{lib_paths.join(', ')}"
+    raise LoadError, "Could not find tantiny library in any of: #{lib_paths.join(", ")}"
   end
-  
+
   # Load the library using Fiddle and call the init function
   handle = Fiddle.dlopen(lib_path)
   Fiddle::Function.new(handle["Init_tantiny"], [], Fiddle::TYPE_VOIDP).call
 end
-

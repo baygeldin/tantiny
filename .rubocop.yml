@@ -5,6 +5,7 @@ inherit_gem:
 
 AllCops:
   NewCops: enable
+  SuggestExtensions: false
   Exclude:
     - "bin/*"
     - "vendor/**/*"

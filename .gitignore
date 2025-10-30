@@ -5,7 +5,6 @@ mkmf.log
 .byebug_history
 .rspec_status
 /.config
-/coverage/
 /InstalledFiles
 /pkg/
 /spec/reports/

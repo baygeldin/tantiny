@@ -273,10 +273,10 @@ RSpec.describe Tantiny::Query do
 
     after(:all) { delete_documents(1, 2, 3) }
 
-    def search(query, **options)
+    def search(query, **)
       if query.is_a?(String)
         fields = @index.schema.text_fields
-        query = Tantiny::Query.smart_query(@index, fields, query, **options)
+        query = Tantiny::Query.smart_query(@index, fields, query, **)
       end
 
       @index.search(query).map(&:to_i)

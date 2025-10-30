@@ -37,10 +37,10 @@ Gem::Specification.new do |spec|
 
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency "thermite", "~> 0"
-  spec.add_runtime_dependency "rake", "~> 13.0"
-  spec.add_runtime_dependency "concurrent-ruby", "~> 1.0"
-  spec.add_runtime_dependency "rexml"
-  spec.add_runtime_dependency "fiddle"
-  spec.add_runtime_dependency "ostruct"
+  spec.add_dependency "thermite", "~> 0"
+  spec.add_dependency "rake", "~> 13.0"
+  spec.add_dependency "concurrent-ruby", "~> 1.0"
+  spec.add_dependency "rexml"
+  spec.add_dependency "fiddle"
+  spec.add_dependency "ostruct"
 end

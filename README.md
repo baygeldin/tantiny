@@ -1,7 +1,6 @@
 [![Build workflow](https://github.com/baygeldin/tantiny/actions/workflows/build.yml/badge.svg)](https://github.com/baygeldin/tantiny/actions/workflows/build.yml)
 [![Tantiny](https://img.shields.io/gem/v/tantiny?color=31c553)](https://rubygems.org/gems/tantiny)
 [![Maintainability](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/maintainability)](https://codeclimate.com/github/baygeldin/tantiny/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/test_coverage)](https://codeclimate.com/github/baygeldin/tantiny/test_coverage)
 
 > [!WARNING]
 > The gem is not currently maintained and the development is put on hold. If you're interested in taking over, feel free to reach out to me.
@@ -10,7 +9,7 @@
 
 Need a fast full-text search for your Ruby script, but Solr and Elasticsearch are an overkill? 😏
 
-You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tanti**v**y](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). It's great for cases when your task at hand requires a full-text search, but configuring a full-blown distributed search engine would take more time than the task itself. And even if you already use such an engine in your project (which is highly likely, actually), it still might be easier to just use Tantiny instead because unlike Solr and Elasticsearch it doesn't need *anything* to work (no separate server or process or whatever), it's purely embeddable. So, when you find yourself in a situation when using your search engine of choice would be tricky/inconvinient or would require additional setup you can always revert back to a quick and dirty solution that is nontheless flexible and fast.
+You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tanti**v**y](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). It's great for cases when your task at hand requires a full-text search, but configuring a full-blown distributed search engine would take more time than the task itself. And even if you already use such an engine in your project (which is highly likely, actually), it still might be easier to just use Tantiny instead because unlike Solr and Elasticsearch it doesn't need _anything_ to work (no separate server or process or whatever), it's purely embeddable. So, when you find yourself in a situation when using your search engine of choice would be tricky/inconvinient or would require additional setup you can always revert back to a quick and dirty solution that is nontheless flexible and fast.
 
 Tantiny is not exactly Ruby bindings to Tantivy, but it tries to be close. The main philosophy is to provide low-level access to Tantivy's inverted index, but with a nice Ruby-esque API, sensible defaults, and additional functionality sprinkled on top.
 
@@ -70,15 +69,15 @@ end
 
 Here are the descriptions for every field type:
 
-| Type | Description |
-| --- | --- |
-| id | Specifies where documents' ids are stored (defaults to `:id`). |
-| facet | Fields with values like `/animals/birds` (i.e. hierarchial categories). |
-| string | Fields with text that are **not** tokenized. |
-| text | Fields with text that are tokenized by the specified tokenizer. |
-| integer | Fields with integer values. |
-| double  | Fields with float values. |
-| date | Fields with either `DateTime` type or something that converts to it. |
+| Type    | Description                                                             |
+| ------- | ----------------------------------------------------------------------- |
+| id      | Specifies where documents' ids are stored (defaults to `:id`).          |
+| facet   | Fields with values like `/animals/birds` (i.e. hierarchial categories). |
+| string  | Fields with text that are **not** tokenized.                            |
+| text    | Fields with text that are tokenized by the specified tokenizer.         |
+| integer | Fields with integer values.                                             |
+| double  | Fields with float values.                                               |
+| date    | Fields with either `DateTime` type or something that converts to it.    |
 
 ## Managing documents
 
@@ -147,7 +146,7 @@ index.transaction do
 end
 ```
 
-Transactions group changes and [commit](https://docs.rs/tantivy/latest/tantivy/struct.IndexWriter.html#method.commit) them to the index in one go. This is *dramatically* more efficient than performing these changes one by one. In fact, all writing operations (i.e. `<<` and `delete`) are wrapped in a transaction implicitly when you call them outside of a transaction, so calling `<<` 10 times outside of a transaction is the same thing as performing 10 separate transactions. 
+Transactions group changes and [commit](https://docs.rs/tantivy/latest/tantivy/struct.IndexWriter.html#method.commit) them to the index in one go. This is _dramatically_ more efficient than performing these changes one by one. In fact, all writing operations (i.e. `<<` and `delete`) are wrapped in a transaction implicitly when you call them outside of a transaction, so calling `<<` 10 times outside of a transaction is the same thing as performing 10 separate transactions.
 
 ### Concurrency and thread-safety
 
@@ -187,7 +186,7 @@ You may wonder, how exactly does it conduct the search? Well, the default behavi
 index.search("a dlunk, a kib, and an olt mab", fuzzy_distance: 1)
 ```
 
-However, you can customize it by composing your own query out of basic building blocks: 
+However, you can customize it by composing your own query out of basic building blocks:
 
 ```ruby
 popular_movies = index.range_query(:rating, 8.0..10.0)
@@ -203,18 +202,18 @@ I know, weird taste! But pretty cool, huh? Take a look at all the available quer
 
 ### Supported queries
 
-| Query | Behavior |
-| --- | --- |
-| all_query | Returns all indexed documents. |
-| empty_query | Returns exactly nothing (used internally). |
-| term_query | Documents that contain the specified term. |
-| fuzzy_term_query | Documents that contain the specified term within a Levenshtein distance. |
-| phrase_query | Documents that contain the specified sequence of terms. |
-| regex_query | Documents that contain a term that matches the specified regex. |
-| prefix_query | Documents that contain a term with the specified prefix. |
-| range_query | Documents that with an `integer`, `double` or `date` field within the specified range. |
-| facet_query | Documents that belong to the specified category. |
-| smart_query | A combination of `term_query`, `fuzzy_term_query` and `prefix_query`. |
+| Query            | Behavior                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| all_query        | Returns all indexed documents.                                                         |
+| empty_query      | Returns exactly nothing (used internally).                                             |
+| term_query       | Documents that contain the specified term.                                             |
+| fuzzy_term_query | Documents that contain the specified term within a Levenshtein distance.               |
+| phrase_query     | Documents that contain the specified sequence of terms.                                |
+| regex_query      | Documents that contain a term that matches the specified regex.                        |
+| prefix_query     | Documents that contain a term with the specified prefix.                               |
+| range_query      | Documents that with an `integer`, `double` or `date` field within the specified range. |
+| facet_query      | Documents that belong to the specified category.                                       |
+| smart_query      | A combination of `term_query`, `fuzzy_term_query` and `prefix_query`.                  |
 
 Take a look at the [signatures file](https://github.com/baygeldin/tantiny/blob/main/sig/tantiny/query.rbs) to see what parameters do queries accept.
 
@@ -281,7 +280,7 @@ The `regex_query` accepts the regex pattern, but it has to be a [Rust regex](htt
 
 So, we've mentioned tokenizers more than once already. What are they?
 
-Tokenizers is what Tantivy uses to chop your text onto terms to build an inverted index. Then you can search the index by these terms. It's an important concept to understand so that you don't get confused when `index.term_query(:description, "Hello")` returns nothing because `Hello` isn't a term, but `hello` is. You have to extract the terms from the query before searching the index. Currently, only `smart_query` does that for you. Also, the only field type that is tokenized is `text`, so for `string` fields you should use the exact match (i.e. `index.term_query(:title, "Hello")`). 
+Tokenizers is what Tantivy uses to chop your text onto terms to build an inverted index. Then you can search the index by these terms. It's an important concept to understand so that you don't get confused when `index.term_query(:description, "Hello")` returns nothing because `Hello` isn't a term, but `hello` is. You have to extract the terms from the query before searching the index. Currently, only `smart_query` does that for you. Also, the only field type that is tokenized is `text`, so for `string` fields you should use the exact match (i.e. `index.term_query(:title, "Hello")`).
 
 ### Specifying the tokenizer
 
@@ -325,6 +324,7 @@ Ngram tokenizer chops your text onto ngrams of specified size.
 tokenizer = Tantiny::Tokenizer.new(:ngram, min: 5, max: 10, prefix_only: true)
 tokenizer.terms("Morrowind") # ["Morro", "Morrow", "Morrowi", "Morrowin", "Morrowind"]
 ```
+
 ## Retrieving documents
 
 You may have noticed that `search` method returns only documents ids. This is by design. The documents themselves are **not** stored in the index. Tantiny is a minimalistic library, so it tries to keep things simple. If you need to retrieve a full document, use a key-value store like Redis alongside.

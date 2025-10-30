@@ -6,12 +6,12 @@ module Tantiny
     DEFAULT_WRITER_MEMORY = 15_000_000 # 15MB
     DEFAULT_LIMIT = 10
 
-    def self.new(path = nil, **options, &block)
+    def self.new(path = nil, **options, &)
       # Only create directory if path is provided
       FileUtils.mkdir_p(path) if path
 
       default_tokenizer = options[:tokenizer] || Tokenizer.default
-      schema = Schema.new(default_tokenizer, &block)
+      schema = Schema.new(default_tokenizer, &)
 
       object = __new(
         path&.to_s,
@@ -159,13 +159,13 @@ module Tantiny
       @exclusive_writer
     end
 
-    def synchronize(&block)
+    def synchronize(&)
       # In-memory indexes don't need file locking
       if in_memory?
-        @transaction_semaphore.synchronize(&block)
+        @transaction_semaphore.synchronize(&)
       else
         @transaction_semaphore.synchronize do
-          Helpers.with_lock(lockfile_path, &block)
+          Helpers.with_lock(lockfile_path, &)
         end
       end
     end
