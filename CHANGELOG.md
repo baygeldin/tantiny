@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/altertable-ai/tantiny/compare/v0.3.3...v0.4.0) (2025-10-30)
+
+### Features
+
+* Add support for Ruby 3.4 ([#21](https://github.com/baygeldin/tantiny/issues/21))
+* Add support for in-memory indexes ([#20](https://github.com/baygeldin/tantiny/issues/20))
+
 ### [0.3.3](https://github.com/baygeldin/tantiny/compare/v0.3.2...v0.3.3) (2022-04-29)
 
 
