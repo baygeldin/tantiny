@@ -1,9 +1,7 @@
-[![Build workflow](https://github.com/baygeldin/tantiny/actions/workflows/build.yml/badge.svg)](https://github.com/baygeldin/tantiny/actions/workflows/build.yml)
-[![Tantiny](https://img.shields.io/gem/v/tantiny?color=31c553)](https://rubygems.org/gems/tantiny)
-[![Maintainability](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/maintainability)](https://codeclimate.com/github/baygeldin/tantiny/maintainability)
+[![Build workflow](https://github.com/altertable-ai/tantiny/actions/workflows/build.yml/badge.svg)](https://github.com/altertable-ai/tantiny/actions/workflows/build.yml)
 
-> [!WARNING]
-> The gem is not currently maintained and the development is put on hold. If you're interested in taking over, feel free to reach out to me.
+> [!IMPORTANT]
+> This is a fork of the [original Tantiny](https://github.com/baygeldin/tantiny) gem. This is an attempt at maintaining the gem and keeping it up to date with the latest versions of Tantivy and Ruby.
 
 # Tantiny
 
@@ -16,7 +14,11 @@ Tantiny is not exactly Ruby bindings to Tantivy, but it tries to be close. The m
 Take a look at the most basic example:
 
 ```ruby
+# Persistent index
 index = Tantiny::Index.new("/path/to/index") { text :description }
+
+# Or in-memory (no persistence)
+index = Tantiny::Index.new { text :description }
 
 index << { id: 1, description: "Hello World!" }
 index << { id: 2, description: "What's up?" }
@@ -45,12 +47,6 @@ Or install it yourself as:
 
 You don't **have to** have Rust installed on your system since Tantiny will try to download the pre-compiled binaries hosted on GitHub releases during the installation. However, if no pre-compiled binaries were found for your system (which is a combination of platform, architecture, and Ruby version) you will need to [install Rust](https://www.rust-lang.org/tools/install) first.
 
-> [!WARNING]
-> Only Rust versions up to `1.77` are supported. See [this issue](https://github.com/baygeldin/tantiny/issues/21) for more details.
-
-> [!IMPORTANT]
-> Please, make sure to specify the minor version when declaring dependency on `tantiny`. The API is a subject to change, and until it reaches `1.0.0` a bump in the minor version will most likely signify a breaking change.
-
 ## Defining the index
 
 You have to specify a path to where the index would be stored and a block that defines the schema:
@@ -66,6 +62,20 @@ Tantiny::Index.new "/tmp/index" do
   date :release_date
 end
 ```
+
+### In-memory indexes
+
+For small to medium datasets or temporary search needs, you can create an in-memory index by omitting the path parameter:
+
+```ruby
+index = Tantiny::Index.new do
+  text :title
+  text :description
+  double :price
+end
+```
+
+In-memory indexes are perfect when you don't need persistence between runs, or when you're building a search index from data that already exists in a database. They offer the same full-text search capabilities without any file I/O overhead.
 
 Here are the descriptions for every field type:
 
@@ -329,15 +339,54 @@ tokenizer.terms("Morrowind") # ["Morro", "Morrow", "Morrowi", "Morrowin", "Morro
 
 You may have noticed that `search` method returns only documents ids. This is by design. The documents themselves are **not** stored in the index. Tantiny is a minimalistic library, so it tries to keep things simple. If you need to retrieve a full document, use a key-value store like Redis alongside.
 
+## Examples
+
+The [examples directory](examples/) contains practical demonstrations of Tantiny's capabilities. These examples are great starting points for understanding how to use Tantiny in real-world scenarios.
+
+### Simple Ranking Example
+
+[`examples/simple_ranking.rb`](examples/simple_ranking.rb)
+
+A minimal demonstration of field-based ranking showing:
+
+- Creating an in-memory index
+- Using boost values to rank title matches higher than description matches
+- Side-by-side comparison of equal weights vs boosted fields
+
+This is perfect for understanding the core concept of ranking in just a few lines of code.
+
+### Ecommerce Example
+
+[`examples/ecommerce.rb`](examples/ecommerce.rb)
+
+A comprehensive example demonstrating in-memory search for a product catalog:
+
+- **In-memory indexing** - Perfect for small to medium datasets without persistent storage
+- **Product search** - Indexing products with various attributes (title, description, category, price, stock)
+- **Fuzzy search** - Handling typos and misspellings (e.g., "loptop" → "laptop")
+- **Field-based ranking** - Boosting title matches to rank higher than description matches
+- **Complex queries** - Combining multiple conditions with AND/OR operators
+- **Category filtering** - Filtering products by exact category match
+- **Price range queries** - Finding products within a specific price range
+
+Run the examples:
+
+```bash
+ruby examples/simple_ranking.rb
+ruby examples/ecommerce.rb
+```
+
+See the [examples README](examples/README.md) for more details.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake build` to build native extensions, and then `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
 
-We use [conventional commits](https://www.conventionalcommits.org) to automatically generate the CHANGELOG, bump the semantic version, and to publish and release the gem. All you need to do is stick to the convention and [CI will take care of everything else](https://github.com/baygeldin/tantiny/blob/main/.github/workflows/release.yml) for you.
+We use [conventional commits](https://www.conventionalcommits.org) to automatically generate the CHANGELOG, bump the semantic version, and to publish and release the gem. All you need to do is stick to the convention and [CI will take care of everything else](https://github.com/altertable-ai/tantiny/blob/main/.github/workflows/release.yml) for you.
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/baygeldin/tantiny.
+Bug reports and pull requests are welcome on GitHub at https://github.com/altertable-ai/tantiny.
 
 ## License
 

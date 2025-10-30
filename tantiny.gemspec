@@ -5,22 +5,21 @@ require_relative "lib/tantiny/version"
 Gem::Specification.new do |spec|
   spec.name = "tantiny"
   spec.version = Tantiny::VERSION
-  spec.authors = ["Alexander Baygeldin"]
-  spec.email = ["a.baygeldin@gmail.com"]
-  spec.homepage = "https://github.com/baygeldin/tantiny"
+  spec.authors = ["Sylvain Utard", "Alexander Baygeldin"]
+  spec.homepage = "https://github.com/altertable-ai/tantiny"
   spec.summary = "Tiny full-text search for Ruby powered by Tantivy."
 
   spec.license = "MIT"
 
   spec.metadata = {
-    "bug_tracker_uri" => "https://github.com/baygeldin/tantiny/issues",
-    "changelog_uri" => "https://github.com/baygeldin/tantiny/blob/master/CHANGELOG.md",
-    "documentation_uri" => "https://github.com/baygeldin/tantiny/blob/master/README.md",
-    "homepage_uri" => "https://github.com/baygeldin/tantiny",
-    "source_code_uri" => "https://github.com/baygeldin/tantiny"
+    "bug_tracker_uri" => "https://github.com/altertable-ai/tantiny/issues",
+    "changelog_uri" => "https://github.com/altertable-ai/tantiny/blob/master/CHANGELOG.md",
+    "documentation_uri" => "https://github.com/altertable-ai/tantiny/blob/master/README.md",
+    "homepage_uri" => "https://github.com/altertable-ai/tantiny",
+    "source_code_uri" => "https://github.com/altertable-ai/tantiny"
   }
 
-  spec.required_ruby_version = ">= 2.7"
+  spec.required_ruby_version = ">= 3.2"
 
   spec.files = [
     Dir.glob("bin/**/*"),
