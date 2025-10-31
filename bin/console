@@ -3,17 +3,16 @@
 
 require "bundler/setup"
 require "pry"
+require "ostruct"
 
 require "tantiny"
-
-path = File.join(__dir__, "../tmp")
 
 options = {
   tokenizer: Tantiny::Tokenizer.new(:stemmer, language: :en),
   exclusive_writer: true,
 }
 
-index = Tantiny::Index.new(path, **options) do
+index = Tantiny::Index.new(nil, **options) do
   id :imdb_id
   facet :category
   string :title
