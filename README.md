@@ -1,10 +1,6 @@
-[![Build workflow](https://github.com/baygeldin/tantiny/actions/workflows/build.yml/badge.svg)](https://github.com/baygeldin/tantiny/actions/workflows/build.yml)
-[![Tantiny](https://img.shields.io/gem/v/tantiny?color=31c553)](https://rubygems.org/gems/tantiny)
-[![Maintainability](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/maintainability)](https://codeclimate.com/github/baygeldin/tantiny/maintainability)
-[![Test Coverage](https://api.codeclimate.com/v1/badges/1b466b52d2ba71ab9d80/test_coverage)](https://codeclimate.com/github/baygeldin/tantiny/test_coverage)
-
-> [!WARNING]
-> The gem is not currently maintained and the development is put on hold. If you're interested in taking over, feel free to reach out to me.
+> [!NOTE]
+> This gem is now maintained by **[@altertable-ai](https://github.com/altertable-ai)**.
+> You can find the new repository at https://github.com/altertable-ai/tantiny.
 
 # Tantiny
 
