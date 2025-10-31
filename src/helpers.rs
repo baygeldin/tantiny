@@ -1,20 +1,41 @@
-use magnus::{r_hash::ForEach, Error, RHash, Ruby, TryConvert, Value};
+use magnus::{r_hash::ForEach, Error, RArray, RHash, Ruby, TryConvert, Value};
 use std::collections::HashMap;
 
-pub fn hash_to_hashmap<K, V>(hash: RHash) -> Result<HashMap<K, V>, Error>
+/// Converts a Ruby hash to a HashMap where values can be either single values or arrays
+pub fn hash_to_multivalue_map<K, V>(hash: RHash) -> Result<HashMap<K, Vec<V>>, Error>
 where
     K: std::cmp::Eq + std::hash::Hash + TryConvert,
     V: TryConvert,
 {
+    let ruby = unsafe { Ruby::get_unchecked() };
     let mut map = HashMap::new();
 
     hash.foreach(|key: Value, value: Value| {
-        let ruby = unsafe { Ruby::get_unchecked() };
         let k: K = K::try_convert(key)
             .map_err(|_| Error::new(ruby.exception_runtime_error(), "Key conversion failed"))?;
-        let v: V = V::try_convert(value)
-            .map_err(|_| Error::new(ruby.exception_runtime_error(), "Value conversion failed"))?;
-        map.insert(k, v);
+
+        let values: Vec<V> = if let Ok(arr) = RArray::try_convert(value) {
+            // Value is an array, convert all elements
+            let mut vec = Vec::new();
+            for item_value in arr.into_iter() {
+                let v: V = V::try_convert(item_value).map_err(|_| {
+                    Error::new(
+                        ruby.exception_runtime_error(),
+                        "Array element conversion failed",
+                    )
+                })?;
+                vec.push(v);
+            }
+            vec
+        } else {
+            // Value is a single value, wrap it in a Vec
+            let v: V = V::try_convert(value).map_err(|_| {
+                Error::new(ruby.exception_runtime_error(), "Value conversion failed")
+            })?;
+            vec![v]
+        };
+
+        map.insert(k, values);
         Ok(ForEach::Continue)
     })?;
 

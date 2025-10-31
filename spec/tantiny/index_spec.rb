@@ -178,7 +178,7 @@ RSpec.describe Tantiny::Index do
         imdb_id: "tt0119250",
         title: "Hana-bi",
         description: "Takeshi Kitano goes bonkers.",
-        category: "/crime/Japan",
+        category: ["/crime/Japan", "/crime/Shinjuku"],
         duration: 103,
         rating: 7.7,
         release_date: Date.parse("December 1, 1998")

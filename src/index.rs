@@ -10,7 +10,7 @@ use tantivy::schema::{
 use tantivy::{IndexReader, IndexWriter, ReloadPolicy, TantivyDocument, Term};
 use time::OffsetDateTime;
 
-use crate::helpers::hash_to_hashmap;
+use crate::helpers::hash_to_multivalue_map;
 use crate::query::Query;
 use crate::tokenizer::Tokenizer;
 
@@ -153,12 +153,12 @@ impl Index {
             Error::new(ruby.exception_runtime_error(), "No index writer available")
         })?;
 
-        let text_map: HashMap<String, String> = hash_to_hashmap(text_fields)?;
-        let string_map: HashMap<String, String> = hash_to_hashmap(string_fields)?;
-        let integer_map: HashMap<String, i64> = hash_to_hashmap(integer_fields)?;
-        let double_map: HashMap<String, f64> = hash_to_hashmap(double_fields)?;
-        let date_map: HashMap<String, String> = hash_to_hashmap(date_fields)?;
-        let facet_map: HashMap<String, String> = hash_to_hashmap(facet_fields)?;
+        let text_map: HashMap<String, Vec<String>> = hash_to_multivalue_map(text_fields)?;
+        let string_map: HashMap<String, Vec<String>> = hash_to_multivalue_map(string_fields)?;
+        let integer_map: HashMap<String, Vec<i64>> = hash_to_multivalue_map(integer_fields)?;
+        let double_map: HashMap<String, Vec<f64>> = hash_to_multivalue_map(double_fields)?;
+        let date_map: HashMap<String, Vec<String>> = hash_to_multivalue_map(date_fields)?;
+        let facet_map: HashMap<String, Vec<String>> = hash_to_multivalue_map(facet_fields)?;
 
         let mut doc = TantivyDocument::default();
 
@@ -170,75 +170,87 @@ impl Index {
         })?;
         doc.add_text(id_field, &id);
 
-        for (key, value) in text_map.iter() {
+        for (key, values) in text_map.iter() {
             let field = self.schema.get_field(key).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
                     format!("Failed to get field {}: {}", key, e),
                 )
             })?;
-            doc.add_text(field, value);
+            for value in values {
+                doc.add_text(field, value);
+            }
         }
 
-        for (key, value) in string_map.iter() {
+        for (key, values) in string_map.iter() {
             let field = self.schema.get_field(key).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
                     format!("Failed to get field {}: {}", key, e),
                 )
             })?;
-            doc.add_text(field, value);
+            for value in values {
+                doc.add_text(field, value);
+            }
         }
 
-        for (key, &value) in integer_map.iter() {
+        for (key, values) in integer_map.iter() {
             let field = self.schema.get_field(key).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
                     format!("Failed to get field {}: {}", key, e),
                 )
             })?;
-            doc.add_i64(field, value);
+            for &value in values {
+                doc.add_i64(field, value);
+            }
         }
 
-        for (key, &value) in double_map.iter() {
+        for (key, values) in double_map.iter() {
             let field = self.schema.get_field(key).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
                     format!("Failed to get field {}: {}", key, e),
                 )
             })?;
-            doc.add_f64(field, value);
+            for &value in values {
+                doc.add_f64(field, value);
+            }
         }
 
-        for (key, value) in date_map.iter() {
+        for (key, values) in date_map.iter() {
             let field = self.schema.get_field(key).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
                     format!("Failed to get field {}: {}", key, e),
                 )
             })?;
-            let datetime =
-                OffsetDateTime::parse(value, &time::format_description::well_known::Rfc3339)
-                    .map_err(|e| {
-                        Error::new(
-                            ruby.exception_runtime_error(),
-                            format!("Invalid date format: {}", e),
-                        )
-                    })?;
-            doc.add_date(
-                field,
-                tantivy::DateTime::from_timestamp_nanos(datetime.unix_timestamp_nanos() as i64),
-            );
+            for value in values {
+                let datetime =
+                    OffsetDateTime::parse(value, &time::format_description::well_known::Rfc3339)
+                        .map_err(|e| {
+                            Error::new(
+                                ruby.exception_runtime_error(),
+                                format!("Invalid date format: {}", e),
+                            )
+                        })?;
+                doc.add_date(
+                    field,
+                    tantivy::DateTime::from_timestamp_nanos(datetime.unix_timestamp_nanos() as i64),
+                );
+            }
         }
 
-        for (key, value) in facet_map.iter() {
+        for (key, values) in facet_map.iter() {
             let field = self.schema.get_field(key).map_err(|e| {
                 Error::new(
                     ruby.exception_runtime_error(),
                     format!("Failed to get field {}: {}", key, e),
                 )
             })?;
-            doc.add_facet(field, value);
+            for value in values {
+                doc.add_facet(field, value);
+            }
         }
 
         let doc_id = Term::from_field_text(id_field, &id);

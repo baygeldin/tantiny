@@ -73,12 +73,12 @@ module Tantiny
       transaction do
         __add_document(
           resolve(document, schema.id_field).to_s,
-          slice_document(document, schema.text_fields) { |v| v.to_s },
-          slice_document(document, schema.string_fields) { |v| v.to_s },
-          slice_document(document, schema.integer_fields) { |v| v.to_i },
-          slice_document(document, schema.double_fields) { |v| v.to_f },
-          slice_document(document, schema.date_fields) { |v| Helpers.timestamp(v) },
-          slice_document(document, schema.facet_fields) { |v| v.to_s }
+          slice_document(document, schema.text_fields) { |v| v.is_a?(Array) ? v.map(&:to_s) : v.to_s },
+          slice_document(document, schema.string_fields) { |v| v.is_a?(Array) ? v.map(&:to_s) : v.to_s },
+          slice_document(document, schema.integer_fields) { |v| v.is_a?(Array) ? v.map(&:to_i) : v.to_i },
+          slice_document(document, schema.double_fields) { |v| v.is_a?(Array) ? v.map(&:to_f) : v.to_f },
+          slice_document(document, schema.date_fields) { |v| v.is_a?(Array) ? v.map { |d| Helpers.timestamp(d) } : Helpers.timestamp(v) },
+          slice_document(document, schema.facet_fields) { |v| v.is_a?(Array) ? v.map(&:to_s) : v.to_s }
         )
       end
     end
