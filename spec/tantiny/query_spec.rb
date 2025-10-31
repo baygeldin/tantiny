@@ -378,4 +378,16 @@ RSpec.describe Tantiny::Query do
       expect(search(query_1 | query_2).first).to eq(3)
     end
   end
+
+  describe "::highlight" do
+    it "highlights the text with fuzzy matches" do
+      highlighted = Tantiny::Query.simple_highlight("hellow world. you are welcome.", "hellow you")
+      expect(highlighted).to eq("<b>hellow</b> world. <b>you</b> are welcome.")
+    end
+
+    it "highlights exact matches" do
+      highlighted = Tantiny::Query.simple_highlight("hello world. you are welcome.", "hello you")
+      expect(highlighted).to eq("<b>hello</b> world. <b>you</b> are welcome.")
+    end
+  end
 end

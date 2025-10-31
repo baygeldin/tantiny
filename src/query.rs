@@ -1,3 +1,4 @@
+use levenshtein_automata::{Distance, LevenshteinAutomatonBuilder};
 use magnus::{Error, Module, Object, RArray, RModule, Ruby, TryConvert, Value};
 use std::ops::Bound::Included;
 use tantivy::query::*;
@@ -211,6 +212,68 @@ impl Query {
         let query = BoostQuery::new(self.0.box_clone(), score as f32);
         Query(Box::new(query))
     }
+
+    fn highlight(text: String, terms: Vec<String>, fuzzy_distance: i64) -> Result<String, Error> {
+        use tantivy::tokenizer::{LowerCaser, SimpleTokenizer, TextAnalyzer, TokenStream};
+
+        // Create a simple tokenizer for highlighting
+        let mut analyzer = TextAnalyzer::builder(SimpleTokenizer::default())
+            .filter(LowerCaser)
+            .build();
+
+        // Tokenize the input text
+        let mut token_stream = analyzer.token_stream(&text);
+
+        // Collect all tokens with their positions
+        let mut tokens = Vec::new();
+        while token_stream.advance() {
+            let token = token_stream.token();
+            tokens.push((token.text.clone(), token.offset_from, token.offset_to));
+        }
+
+        // Build Levenshtein automata for each term (same algorithm as Tantivy's FuzzyTermQuery)
+        let lev_builder = LevenshteinAutomatonBuilder::new(fuzzy_distance as u8, true);
+        let automata: Vec<_> = terms
+            .iter()
+            .map(|term| lev_builder.build_dfa(term))
+            .collect();
+
+        // Build the highlighted text
+        let mut result = String::new();
+        let mut last_pos = 0;
+
+        for (token_text, start, end) in tokens {
+            // Check if this token matches any of the query terms (exact or fuzzy)
+            let should_highlight = terms.iter().zip(&automata).any(|(term, dfa)| {
+                // Exact match
+                if token_text.eq_ignore_ascii_case(term) {
+                    return true;
+                }
+
+                // Fuzzy match using Levenshtein automaton (same as Tantivy's FuzzyTermQuery)
+                matches!(dfa.eval(&token_text), Distance::Exact(_))
+            });
+
+            // Add the text before the token
+            result.push_str(&text[last_pos..start]);
+
+            // Add the token, highlighted if it matches
+            if should_highlight {
+                result.push_str("<b>");
+                result.push_str(&text[start..end]);
+                result.push_str("</b>");
+            } else {
+                result.push_str(&text[start..end]);
+            }
+
+            last_pos = end;
+        }
+
+        // Add any remaining text after the last token
+        result.push_str(&text[last_pos..]);
+
+        Ok(result)
+    }
 }
 
 pub fn init(ruby: &Ruby, module: RModule) -> Result<(), Error> {
@@ -234,6 +297,7 @@ pub fn init(ruby: &Ruby, module: RModule) -> Result<(), Error> {
     class.define_singleton_method("__conjunction", magnus::function!(Query::conjunction, 1))?;
     class.define_method("__negation", magnus::method!(Query::negation, 0))?;
     class.define_method("__boost", magnus::method!(Query::boost, 1))?;
+    class.define_singleton_method("__highlight", magnus::function!(Query::highlight, 3))?;
 
     Ok(())
 }

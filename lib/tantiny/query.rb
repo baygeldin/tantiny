@@ -93,7 +93,7 @@ module Tantiny
         fuzzy_distance = options[:fuzzy_distance]
         boost_factor = options.fetch(:boost, DEFAULT_BOOST)
 
-        field_queries = [*fields].map do |field|
+        field_queries = [*fields].filter_map do |field|
           terms = index.schema.tokenizer_for(field).terms(query_string)
 
           # See: https://github.com/soutaro/steep/issues/272
@@ -113,9 +113,15 @@ module Tantiny
           last_term_query = prefix_query(index, field, terms.last) | term_queries.last
 
           conjunction(last_term_query, *term_queries[0...-1])
-        end.compact
+        end
 
         disjunction(*field_queries).boost(boost_factor)
+      end
+
+      def simple_highlight(text, query_string, fuzzy_distance: DEFAULT_FUZZY_DISTANCE)
+        tokenizer = Tantiny::Tokenizer.new(:simple) # rely on the default/simple tokenizer for now
+        terms = tokenizer.terms(query_string).map(&:to_s)
+        __highlight(text.to_s, terms, fuzzy_distance)
       end
 
       private
