@@ -345,26 +345,26 @@ You may have noticed that `search` method returns only documents ids. This is by
 Tantiny supports highlighting of search results. This is useful when you want to display the search results in a more readable format.
 
 ```ruby
-Tantiny::Query.simple_highlight(field_text, query_string)
+Tantiny::Query.highlight(field_text, query_string)
 ```
 
 It supports fuzzy highlighting by specifying the fuzzy distance.
 
 ```ruby
-Tantiny::Query.simple_highlight(field_text, query_string, fuzzy_distance: 2)
+Tantiny::Query.highlight(field_text, query_string, fuzzy_distance: 2)
 ```
 
 As well as custom tokenizers, but make sure to use the same tokenizer that was used to index the field.
 
 ```ruby
 tokenizer = Tantiny::Tokenizer.new(:stemmer, language: :fr)
-Tantiny::Query.simple_highlight(field_text, query_string, tokenizer: tokenizer)
+Tantiny::Query.highlight(field_text, query_string, tokenizer: tokenizer)
 ```
 
 This will return the text with the terms highlighted:
 
 ```ruby
-Tantiny::Query.simple_highlight("hellow world. you are welcome.", "hello you")
+Tantiny::Query.highlight("hellow world. you are welcome.", "hello you")
 # "<b>hellow</b> world. <b>you</b> are welcome."
 ```
 
