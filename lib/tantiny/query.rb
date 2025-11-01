@@ -118,8 +118,7 @@ module Tantiny
         disjunction(*field_queries).boost(boost_factor)
       end
 
-      def simple_highlight(text, query_string, fuzzy_distance: DEFAULT_FUZZY_DISTANCE)
-        tokenizer = Tantiny::Tokenizer.new(:simple) # rely on the default/simple tokenizer for now
+      def simple_highlight(text, query_string, fuzzy_distance: 0, tokenizer: Tantiny::Tokenizer.new(:simple))
         terms = tokenizer.terms(query_string).map(&:to_s)
         __highlight(text.to_s, terms, fuzzy_distance)
       end

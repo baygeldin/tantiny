@@ -1,20 +1,19 @@
 [![Build workflow](https://github.com/altertable-ai/tantiny/actions/workflows/build.yml/badge.svg)](https://github.com/altertable-ai/tantiny/actions/workflows/build.yml)
 
-> [!IMPORTANT]
-> This is a fork of the [original Tantiny](https://github.com/baygeldin/tantiny) gem. This is an attempt at maintaining the gem and keeping it up to date with the latest versions of Tantivy and Ruby.
+> This is a fork of the [original Tantiny](https://github.com/baygeldin/tantiny) gem by [Alexander Baygeldin](https://github.com/baygeldin). Following https://github.com/baygeldin/tantiny/pull/24 we agreed transfering ownership of the gem to [Altertable](https://github.com/altertable-ai) so we can keep it up to date with the latest versions of Tantivy and Ruby.
 
 # Tantiny
 
-Need a fast full-text search for your Ruby script, but Solr and Elasticsearch are an overkill? 😏
+Need a fast full-text search for your Ruby script, but don't want to host/operate a full-blown search engine yet?
 
-You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tanti**v**y](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). It's great for cases when your task at hand requires a full-text search, but configuring a full-blown distributed search engine would take more time than the task itself. And even if you already use such an engine in your project (which is highly likely, actually), it still might be easier to just use Tantiny instead because unlike Solr and Elasticsearch it doesn't need _anything_ to work (no separate server or process or whatever), it's purely embeddable. So, when you find yourself in a situation when using your search engine of choice would be tricky/inconvinient or would require additional setup you can always revert back to a quick and dirty solution that is nontheless flexible and fast.
+You're in the right place. **Tantiny** is a minimalistic full-text search library for Ruby based on [Tanti**v**y](https://github.com/quickwit-oss/tantivy) (an awesome alternative to Apache Lucene written in Rust). It's great for cases when your task at hand requires a full-text search, but configuring a full-blown distributed search engine would take more time than the task itself. And even if you already use such an engine in your project (which is highly likely, actually), it still might be easier to just use Tantiny instead because unlike Solr, Elasticsearch, or any hosted search engine it doesn't need _anything_ to work (no separate server, process, API or whatever), it's purely embeddable. So, when you find yourself in a situation when using your search engine of choice would be tricky/inconvinient or would require additional setup you can always revert back to a quick and dirty solution that is nontheless flexible and fast.
 
 Tantiny is not exactly Ruby bindings to Tantivy, but it tries to be close. The main philosophy is to provide low-level access to Tantivy's inverted index, but with a nice Ruby-esque API, sensible defaults, and additional functionality sprinkled on top.
 
 Take a look at the most basic example:
 
 ```ruby
-# Persistent index
+# Persisted index
 index = Tantiny::Index.new("/path/to/index") { text :description }
 
 # Or in-memory (no persistence)
@@ -47,25 +46,25 @@ Or install it yourself as:
 
 You don't **have to** have Rust installed on your system since Tantiny will try to download the pre-compiled binaries hosted on GitHub releases during the installation. However, if no pre-compiled binaries were found for your system (which is a combination of platform, architecture, and Ruby version) you will need to [install Rust](https://www.rust-lang.org/tools/install) first.
 
-## Defining the index
+## Defining the index schema
 
-You have to specify a path to where the index would be stored and a block that defines the schema:
+Whether you want to use a persisted index or an in-memory index, you need to define the schema first:
 
 ```ruby
-Tantiny::Index.new "/tmp/index" do
+Tantiny::Index.new(path_or_memory) do
   id :imdb_id
-  facet :category
   string :title
   text :description
   integer :duration
   double :rating
   date :release_date
+  facet :category
 end
 ```
 
-### In-memory indexes
+## In-memory indexes
 
-For small to medium datasets or temporary search needs, you can create an in-memory index by omitting the path parameter:
+For small to medium datasets or temporary search needs (or tests!), you can create an in-memory index by omitting the path parameter:
 
 ```ruby
 index = Tantiny::Index.new do
@@ -76,6 +75,8 @@ end
 ```
 
 In-memory indexes are perfect when you don't need persistence between runs, or when you're building a search index from data that already exists in a database. They offer the same full-text search capabilities without any file I/O overhead.
+
+## Field types
 
 Here are the descriptions for every field type:
 
@@ -88,6 +89,8 @@ Here are the descriptions for every field type:
 | integer | Fields with integer values.                                             |
 | double  | Fields with float values.                                               |
 | date    | Fields with either `DateTime` type or something that converts to it.    |
+
+Each field can either be a single value or an array of values.
 
 ## Managing documents
 
@@ -225,8 +228,6 @@ I know, weird taste! But pretty cool, huh? Take a look at all the available quer
 | facet_query      | Documents that belong to the specified category.                                       |
 | smart_query      | A combination of `term_query`, `fuzzy_term_query` and `prefix_query`.                  |
 
-Take a look at the [signatures file](https://github.com/baygeldin/tantiny/blob/main/sig/tantiny/query.rbs) to see what parameters do queries accept.
-
 ### Searching on multiple fields
 
 All queries can search on multuple fields (except for `facet_query` because it doesn't make sense there).
@@ -339,6 +340,34 @@ tokenizer.terms("Morrowind") # ["Morro", "Morrow", "Morrowi", "Morrowin", "Morro
 
 You may have noticed that `search` method returns only documents ids. This is by design. The documents themselves are **not** stored in the index. Tantiny is a minimalistic library, so it tries to keep things simple. If you need to retrieve a full document, use a key-value store like Redis alongside.
 
+## Highlighting
+
+Tantiny supports highlighting of search results. This is useful when you want to display the search results in a more readable format.
+
+```ruby
+Tantiny::Query.simple_highlight(field_text, query_string)
+```
+
+It supports fuzzy highlighting by specifying the fuzzy distance.
+
+```ruby
+Tantiny::Query.simple_highlight(field_text, query_string, fuzzy_distance: 2)
+```
+
+As well as custom tokenizers, but make sure to use the same tokenizer that was used to index the field.
+
+```ruby
+tokenizer = Tantiny::Tokenizer.new(:stemmer, language: :fr)
+Tantiny::Query.simple_highlight(field_text, query_string, tokenizer: tokenizer)
+```
+
+This will return the text with the terms highlighted:
+
+```ruby
+Tantiny::Query.simple_highlight("hellow world. you are welcome.", "hello you")
+# "<b>hellow</b> world. <b>you</b> are welcome."
+```
+
 ## Examples
 
 The [examples directory](examples/) contains practical demonstrations of Tantiny's capabilities. These examples are great starting points for understanding how to use Tantiny in real-world scenarios.
@@ -368,13 +397,6 @@ A comprehensive example demonstrating in-memory search for a product catalog:
 - **Complex queries** - Combining multiple conditions with AND/OR operators
 - **Category filtering** - Filtering products by exact category match
 - **Price range queries** - Finding products within a specific price range
-
-Run the examples:
-
-```bash
-ruby examples/simple_ranking.rb
-ruby examples/ecommerce.rb
-```
 
 See the [examples README](examples/README.md) for more details.
 
